@@ -1,0 +1,12 @@
+.godot/
+/addons/ziva_agent/bin-deps/windows_x86_64/ffmpeg.exe
+/addons/ziva_agent/bin-deps/windows_x86_64/git/
+/addons/ziva_agent/bin-deps/windows_x86_64/rg.exe
+/addons/ziva_agent/bin/windows_x86_64/libziva_agent.windows.release.x86_64.dll
+/addons/ziva_agent/bin/windows_x86_64/~libziva_agent.windows.release.x86_64
+/addons/ziva_agent/bin/windows_x86_64/~libziva_agent.windows.release.x86_64.dll
+/addons/ziva_agent/zivacode/windows_x86_64/zivacode.exe
+*.tmp
+*.bak
+/tmp_*.png
+/tmp_*.png.import

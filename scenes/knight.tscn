@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://cn35k75wlukw"]
+
+[ext_resource type="SpriteFrames" uid="uid://1uhy8qdmpbee" path="res://knight_sprite_frames.tres" id="1_knight_frames"]
+[ext_resource type="Script" uid="uid://cj6fs7x7m8lg4" path="res://scripts/player_controller.gd" id="2_player_controller"]
+[ext_resource type="Shape2D" uid="uid://c462qsamu88qi" path="res://resources/player_body_shape.tres" id="3_body_shape"]
+[ext_resource type="Shape2D" uid="uid://cu6mb8y4gbfkh" path="res://resources/player_hurtbox_shape.tres" id="5_hurt_shape"]
+[ext_resource type="Shape2D" uid="uid://ddg8shcnb3mxc" path="res://resources/player_attack_hitbox_shape.tres" id="6_attack_shape"]
+[ext_resource type="Texture2D" uid="uid://blit6vawywo03" path="res://resources/player_light.tres" id="7_player_light"]
+[ext_resource type="Script" uid="uid://bepvxaofa77om" path="res://scripts/player_light.gd" id="8_player_light_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground_pound"]
+size = Vector2(180, 42)
+
+[node name="knight" type="CharacterBody2D" unique_id=118714288 groups=["player"]]
+z_index = 10
+collision_layer = 2
+script = ExtResource("2_player_controller")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=305706238]
+position = Vector2(0, -36)
+sprite_frames = ExtResource("1_knight_frames")
+animation = &"shrug"
+frame = 9
+frame_progress = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1575968861]
+position = Vector2(-3, -10.5)
+shape = ExtResource("3_body_shape")
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1122129047]
+position = Vector2(0, -31)
+collision_layer = 2
+collision_mask = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1861859765]
+position = Vector2(-3.5, 19.5)
+shape = ExtResource("5_hurt_shape")
+
+[node name="AttackHitbox" type="Area2D" parent="." unique_id=2011778198 groups=["player_attack_hitbox"]]
+position = Vector2(22, -31)
+collision_layer = 4
+collision_mask = 8
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox" unique_id=941089570]
+position = Vector2(-3.5, 0)
+shape = ExtResource("6_attack_shape")
+
+[node name="GroundPoundHitbox" type="Area2D" parent="." unique_id=2105386611]
+collision_layer = 4
+collision_mask = 8
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundPoundHitbox" unique_id=2083079043]
+position = Vector2(0, 12)
+shape = SubResource("RectangleShape2D_ground_pound")
+disabled = true
+
+[node name="PlayerLight" type="PointLight2D" parent="." unique_id=2105386612]
+enabled = false
+color = Color(1, 0.82, 0.55, 1)
+energy = 0.32
+texture = ExtResource("7_player_light")
+texture_scale = 1.35
+script = ExtResource("8_player_light_script")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2105386610]
+position = Vector2(0, -20)
+zoom = Vector2(3.3, 3.3)
+limit_left = 0
+limit_top = 0
+limit_right = 5088
+limit_bottom = 736
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0

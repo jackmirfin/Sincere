@@ -1,0 +1,4 @@
+[gd_resource type="RectangleShape2D" format=3 uid="uid://cu6mb8y4gbfkh"]
+
+[resource]
+size = Vector2(13, 25)

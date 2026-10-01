@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://def54w23gk5lf"]
+
+[ext_resource type="Texture2D" uid="uid://drdqtybu6t3h5" path="res://assets/tilemaps/lock.png" id="1_60jus"]
+
+[node name="lock" type="Sprite2D" unique_id=317366298]
+texture = ExtResource("1_60jus")

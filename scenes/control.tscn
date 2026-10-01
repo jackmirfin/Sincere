@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://batbhuwlre4a4"]
+
+[ext_resource type="Script" uid="uid://cyt3ys1tsaxcv" path="res://scripts/pause_menu.gd" id="2_pause_menu"]
+[ext_resource type="Texture2D" uid="uid://c8wh4uwo13up0" path="res://assets/ui/mp3.png" id="2_r67kn"]
+
+[node name="Control" type="Control" unique_id=1937878151]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_pause_menu")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1141596156]
+texture_filter = 1
+layout_mode = 0
+offset_right = 320.0
+offset_bottom = 308.0
+texture = ExtResource("2_r67kn")

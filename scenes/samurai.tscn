@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://btdvumv1xxdnt"]
+
+[ext_resource type="SpriteFrames" uid="uid://e3jth8obbcf2" path="res://samurai_sprite_frames.tres" id="5_samurai_frames"]
+[ext_resource type="Script" uid="uid://d4at8xf7grqeg" path="res://scripts/samurai_enemy.gd" id="6_samurai_script"]
+[ext_resource type="Shape2D" uid="uid://cy4kwo4eu82ef" path="res://resources/samurai_body_shape.tres" id="7_samurai_body"]
+[ext_resource type="Shape2D" uid="uid://bsbmywnbhnean" path="res://resources/samurai_hurtbox_shape.tres" id="8_samurai_hurt"]
+[ext_resource type="Shape2D" path="res://resources/samurai_weapon_shape.tres" id="9_samurai_weapon"]
+
+[node name="samurai" type="CharacterBody2D" unique_id=723977644 groups=["enemy"]]
+position = Vector2(0, 15)
+collision_layer = 8
+script = ExtResource("6_samurai_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1329065306]
+position = Vector2(0, -48)
+sprite_frames = ExtResource("5_samurai_frames")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=72246871]
+position = Vector2(0, -34.5)
+shape = ExtResource("7_samurai_body")
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=2087457682]
+position = Vector2(0, -27)
+collision_layer = 8
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=643855789]
+position = Vector2(1, -5)
+shape = ExtResource("8_samurai_hurt")
+
+[node name="WeaponHitbox" type="Area2D" parent="." unique_id=1639868365 groups=["enemy_weapon_hitbox"]]
+position = Vector2(-30, -32)
+collision_layer = 16
+collision_mask = 2
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WeaponHitbox" unique_id=1602287134]
+shape = ExtResource("9_samurai_weapon")
+disabled = true

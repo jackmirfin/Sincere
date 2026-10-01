@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://bta0o7h006okw"]
+
+[ext_resource type="Texture2D" uid="uid://di5nk5n5y58b0" path="res://assets/characters/mushroom/Projectile_sprite.png" id="1_4wp66"]
+[ext_resource type="Script" path="res://scripts/mushroom_projectile.gd" id="2_projectile"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_13qdw"]
+radius = 4.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4q3a"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0fltn"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(50, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3o0hs"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(100, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b2dux"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(150, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c20mh"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(200, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nqc4f"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(250, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8y4l6"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(300, 0, 50, 50)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3xpnv"]
+atlas = ExtResource("1_4wp66")
+region = Rect2(350, 0, 50, 50)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4q3a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0fltn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3o0hs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b2dux")
+}],
+"loop": 1,
+"name": &"projectileflying",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c20mh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nqc4f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8y4l6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3xpnv")
+}],
+"loop": 0,
+"name": &"projectileimpact",
+"speed": 5.0
+}]
+
+[node name="mushroomprojectile" type="Area2D" unique_id=382255845 groups=["enemy_weapon_hitbox"]]
+script = ExtResource("2_projectile")
+collision_layer = 16
+collision_mask = 2
+monitoring = true
+
+[node name="hurtbox" type="CollisionShape2D" parent="." unique_id=107401128]
+position = Vector2(1, 1)
+shape = SubResource("CircleShape2D_13qdw")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1856188065]
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"projectileflying"
+autoplay = "projectileflying"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://deyg05hrsytl4"
+
+[deps]
+
+files=["res://assets/characters/ogre/verification_alpha.Width.translation", "res://assets/characters/ogre/verification_alpha.Height.translation", "res://assets/characters/ogre/verification_alpha.Transparent.translation", "res://assets/characters/ogre/verification_alpha.Opaque.translation", "res://assets/characters/ogre/verification_alpha.SemiAlpha.translation", "res://assets/characters/ogre/verification_alpha.TransparentRgbNotZero.translation"]
+
+source_file="res://assets/characters/ogre/verification_alpha.csv"
+dest_files=["res://assets/characters/ogre/verification_alpha.Width.translation", "res://assets/characters/ogre/verification_alpha.Height.translation", "res://assets/characters/ogre/verification_alpha.Transparent.translation", "res://assets/characters/ogre/verification_alpha.Opaque.translation", "res://assets/characters/ogre/verification_alpha.SemiAlpha.translation", "res://assets/characters/ogre/verification_alpha.TransparentRgbNotZero.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

@@ -1,0 +1,92 @@
+[gd_scene format=3 uid="uid://cbjf2cjgy8g2e"]
+
+[ext_resource type="Texture2D" uid="uid://cylgy0m60tiiy" path="res://assets/characters/flying eye/projectile_sprite.png" id="1_fydvt"]
+[ext_resource type="Script" path="res://scripts/flying_eye_projectile.gd" id="2_projectile_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d14kr"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lp77t"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_otc2n"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_amawr"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(288, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oga3p"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(336, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s0uqe"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rbcxy"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0818u"]
+atlas = ExtResource("1_fydvt")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_13qdw"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d14kr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lp77t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_otc2n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_amawr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oga3p")
+}],
+"loop": 0,
+"name": &"impact",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s0uqe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rbcxy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0818u")
+}],
+"loop": 0,
+"name": &"projectile",
+"speed": 8.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_projectile"]
+radius = 12.0
+
+[node name="flyingeyeprojectile" type="Area2D" unique_id=1658434144]
+collision_layer = 16
+collision_mask = 2
+monitoring = true
+script = ExtResource("2_projectile_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=853138922]
+sprite_frames = SubResource("SpriteFrames_13qdw")
+animation = &"projectile"
+autoplay = "projectile"
+frame = 2
+frame_progress = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_projectile")

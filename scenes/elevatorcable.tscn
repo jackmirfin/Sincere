@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://dm2tbatmu2qas"]
+
+[ext_resource type="Texture2D" uid="uid://ox6bwypkwky5" path="res://assets/tilemaps/cable.png" id="1_6tijb"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pghim"]
+atlas = ExtResource("1_6tijb")
+region = Rect2(0, 32, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v0c8f"]
+atlas = ExtResource("1_6tijb")
+region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ywe5m"]
+atlas = ExtResource("1_6tijb")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pvjcs"]
+atlas = ExtResource("1_6tijb")
+region = Rect2(0, 48, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jar1v"]
+atlas = ExtResource("1_6tijb")
+region = Rect2(0, 48, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pghim")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v0c8f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ywe5m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pvjcs")
+}],
+"loop": 1,
+"name": &"active",
+"speed": 32.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jar1v")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[node name="elevatorcable" type="AnimatedSprite2D" unique_id=1794803845]
+position = Vector2(0, 7.1525574e-07)
+scale = Vector2(1, 1.0000001)
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"active"
+autoplay = "idle"
+frame_progress = 0.29415768

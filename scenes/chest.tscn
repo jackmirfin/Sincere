@@ -1,0 +1,65 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/tilemaps/chests.png" id="1_chests"]
+[ext_resource type="Script" path="res://scripts/chest.gd" id="2_chest"]
+
+[sub_resource type="AtlasTexture" id="Atlas_shut"]
+atlas = ExtResource("1_chests")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_opening_1"]
+atlas = ExtResource("1_chests")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_opening_2"]
+atlas = ExtResource("1_chests")
+region = Rect2(64, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_opening_3"]
+atlas = ExtResource("1_chests")
+region = Rect2(96, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_opening_4"]
+atlas = ExtResource("1_chests")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_open"]
+atlas = ExtResource("1_chests")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_chest"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_open")}],
+"loop": true,
+"name": &"open",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_opening_1")}, {"duration": 1.0, "texture": SubResource("Atlas_opening_2")}, {"duration": 1.0, "texture": SubResource("Atlas_opening_3")}, {"duration": 1.0, "texture": SubResource("Atlas_opening_4")}],
+"loop": false,
+"name": &"opening",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_shut")}],
+"loop": true,
+"name": &"shut",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chest"]
+size = Vector2(30, 24)
+
+[node name="chest" type="Area2D"]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("2_chest")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -16)
+sprite_frames = SubResource("SpriteFrames_chest")
+animation = &"shut"
+autoplay = "shut"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -12)
+shape = SubResource("RectangleShape2D_chest")

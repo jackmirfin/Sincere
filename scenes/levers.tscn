@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://c0duioyxbb4th"]
+
+[ext_resource type="Texture2D" uid="uid://dtngjkkelelpg" path="res://assets/tilemaps/pixelcave/Pocket Dungeon Tileset 1,5.png" id="1_8ja8b"]
+[ext_resource type="Script" path="res://scripts/cave_lever.gd" id="2_lever"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vb3gc"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(320, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oe2rt"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(224, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ay3ws"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(240, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c0jrq"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(256, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kt251"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(272, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mlsrd"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(288, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eyauc"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(304, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qygbm"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(320, 512, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p4sst"]
+atlas = ExtResource("1_8ja8b")
+region = Rect2(224, 512, 16, 16)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_activation"]
+radius = 44.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vb3gc")
+}],
+"loop": 1,
+"name": &"flipped",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oe2rt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ay3ws")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c0jrq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kt251")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mlsrd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eyauc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qygbm")
+}],
+"loop": 0,
+"name": &"flipping",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p4sst")
+}],
+"loop": 1,
+"name": &"unflipped",
+"speed": 5.0
+}]
+
+[node name="lever" type="AnimatedSprite2D" unique_id=2071505259]
+sprite_frames = SubResource("SpriteFrames_xrivr")
+script = ExtResource("2_lever")
+animation = &"flipping"
+autoplay = "unflipped"
+frame = 6
+frame_progress = 1.0
+
+[node name="ActivationArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActivationArea"]
+shape = SubResource("CircleShape2D_activation")
