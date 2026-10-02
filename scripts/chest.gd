@@ -16,6 +16,17 @@ func _ready() -> void:
 	animated_sprite.animation_finished.connect(_on_animation_finished)
 	animated_sprite.play(&"shut")
 
+func _physics_process(_delta: float) -> void:
+	# Attacks enable their hitbox mid-swing; on some scene load/overlap orders
+	# the initial area_entered signal can be missed. Recheck active attack areas
+	# so Twilight Cave chests still open when the hitbox is already overlapping.
+	if opened:
+		return
+	for area: Area2D in get_overlapping_areas():
+		if area.is_in_group("player_attack_hitbox"):
+			_on_area_entered(area)
+			return
+
 func _on_area_entered(area: Area2D) -> void:
 	if opened or not area.is_in_group("player_attack_hitbox"):
 		return

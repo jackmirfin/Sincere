@@ -5,10 +5,12 @@ signal gameplay_state_changed(state: StringName)
 signal health_changed(current_health: int, maximum_health: int)
 signal speed_boost_changed(active: bool, time_remaining: float)
 
-enum PlayerState { LOCOMOTION, TURN, CROUCH_TRANSITION, CROUCH, CROUCH_ATTACK, SLIDE_START, SLIDE, SLIDE_END, WALL_HANG, WALL_CLIMB, WALL_SLIDE, ATTACK1, ATTACK2, ATTACK3, GROUND_POUND, GROUND_POUND_SLAM, JUMP, JUMP_TRANSITION, FALL, HIT, DEATH, ROLL, DASH }
+enum PlayerState { LOCOMOTION, TURN, CROUCH_TRANSITION, CROUCH, CROUCH_ATTACK, SLIDE_START, SLIDE, SLIDE_END, WALL_HANG, WALL_CLIMB, WALL_SLIDE, ATTACK1, ATTACK2, ATTACK3, GROUND_POUND, GROUND_POUND_SLAM, JUMP, JUMP_TRANSITION, FALL, HIT, DEATH, ROLL, DASH, BLOCK_START, BLOCKING, UNBLOCK, PARRY }
 
-const REQUIRED_ANIMATIONS: Array[StringName] = [&"idle", &"run", &"turn_around", &"crouch", &"crouch_transition", &"crouchwalk", &"crouchattack", &"slide", &"slide_transitionstart", &"slidefull", &"wallhang", &"wallclimb", &"wallclimb_no_movement", &"wallslide", &"attack", &"attack_no_movement", &"attack2", &"attack2_no_movement", &"attackcombo", &"attackcombo_no_movement", &"jump", &"jump_fall_inbetween", &"fall", &"hit", &"death", &"death_no_movement", &"roll", &"dash"]
+const REQUIRED_ANIMATIONS: Array[StringName] = [&"idle", &"run", &"turn_around", &"crouch", &"crouch_transition", &"crouchwalk", &"crouchattack", &"slide", &"slide_transitionstart", &"slidefull", &"wallhang", &"wallclimb", &"wallclimb_no_movement", &"wallslide", &"attack", &"attack_no_movement", &"attack2", &"attack2_no_movement", &"attackcombo", &"attackcombo_no_movement", &"jump", &"jump_fall_inbetween", &"fall", &"hit", &"block", &"blocking", &"parry", &"unblocking", &"death", &"death_no_movement", &"roll", &"dash"]
 const EXPECTED_FRAME_COUNTS: Dictionary = {&"idle": 10, &"run": 10, &"turn_around": 3, &"crouch_transition": 1, &"crouch": 1, &"crouchwalk": 8, &"crouchattack": 4, &"slide": 2, &"slide_transitionstart": 1, &"wallhang": 1, &"wallclimb": 17, &"wallclimb_no_movement": 7, &"wallslide": 3, &"attack": 4, &"attack_no_movement": 8, &"attack2": 6, &"attack2_no_movement": 6, &"jump": 3, &"jump_fall_inbetween": 2, &"fall": 3, &"hit": 1, &"death": 10, &"death_no_movement": 10, &"roll": 12, &"dash": 2}
+const STEP_UP_HEIGHT: float = 16.0
+const STEP_FORWARD_CLEARANCE: float = 4.0
 const MOVE_SPEED: float = 202.0
 const CROUCH_SPEED: float = 108.0
 const ACCELERATION: float = 1200.0
@@ -24,6 +26,16 @@ const ROLL_DURATION: float = 0.55
 const ROLL_SPEED: float = 125.0
 const ACTION_SPEED: float = 190.0
 const ACTION_DURATION: float = 0.55
+const PARRY_WINDOW: float = 0.35
+const PARRY_TAP_WINDOW: float = 0.50
+const PARRY_SLOWMO_DURATION: float = 0.4
+const PARRY_SLOWMO_SCALE: float = 0.65
+const PARRY_INVULNERABILITY_DURATION: float = 1.5
+const PARRY_STUN_DURATION: float = 0.8
+const PARRY_ENEMY_KNOCKBACK: float = 105.0
+const HIT_SLOWMO_SCALE: float = 0.9
+const HIT_SLOWMO_DURATION: float = 0.15
+const BLOCK_DAMAGE_DIVISOR: int = 5
 const WALL_JUMP_VELOCITY: Vector2 = Vector2(260.0, -360.0)
 const WALL_AWAY_JUMP_VELOCITY: Vector2 = Vector2(360.0, -500.0)
 const WALL_ENTRY_LIFT_SPEED: float = -85.0
@@ -31,9 +43,14 @@ const MANTLE_UP_DISTANCE: float = 22.0
 const MANTLE_FORWARD_DISTANCE: float = 8.0
 const MANTLE_DURATION: float = 0.12
 const PLAYER_HURT_SOUND: AudioStream = preload("res://assets/sounds/playerhurt.mp3")
+const SHIELD_IMPACT_SOUND: AudioStream = preload("res://assets/sounds/shieldimpact.mp3")
+const BLOCK_TAP_PARRY_THRESHOLD: float = 0.18
+const BLOCKED_ENEMY_KNOCKBACK: float = 260.0
+const PARRY_SOUND_PITCH: float = 1.22
 const STANDING_SHAPE: Shape2D = preload("res://resources/player_body_shape.tres")
 const CROUCH_SHAPE: Shape2D = preload("res://resources/player_crouch_shape.tres")
 const SPRITE_STANDING_Y: float = -36.0
+const SPRITE_SHIELD_Y: float = -16.0
 const SPRITE_LOW_Y: float = -31.0
 const SPRITE_WALL_Y: float = -36.0
 const MENU_SPRITE_OFFSET_X: float = -5.0
@@ -110,12 +127,16 @@ var elevator_ride_active: bool = false
 var attack_damage_bonus: int = 0
 var move_speed_multiplier: float = 1.0
 var hit_slowdown_active: bool = false
-var hit_freeze_active: bool = false
 var speed_boost_time: float = 0.0
 var quick_kill_time: float = 0.0
 var quick_kill_count: int = 0
 var enemy_death_states: Dictionary = {}
 var hurt_audio: AudioStreamPlayer2D
+var shield_audio: AudioStreamPlayer2D
+var block_press_time: float = -10.0
+var block_slowmo_active: bool = false
+var block_slowmo_token: int = 0
+var parry_invulnerability_time: float = 0.0
 
 func _add_sheet_animation(animation_name: StringName, texture_path: String, frame_size: Vector2, frame_count: int, speed: float, loop: bool) -> void:
 	if animated_sprite.sprite_frames.has_animation(animation_name):
@@ -173,6 +194,10 @@ func _ready() -> void:
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = PLAYER_HURT_SOUND
 	add_child(hurt_audio)
+	shield_audio = AudioStreamPlayer2D.new()
+	shield_audio.name = "ShieldImpactSound"
+	shield_audio.stream = SHIELD_IMPACT_SOUND
+	add_child(shield_audio)
 	floor_snap_length = floor_snap_distance
 	if not animated_sprite.animation_finished.is_connected(_on_animation_finished):
 		animated_sprite.animation_finished.connect(_on_animation_finished)
@@ -231,6 +256,20 @@ func _physics_process(delta: float) -> void:
 	if combo_buffer_time > 0.0:
 		combo_buffer_time = maxf(0.0, combo_buffer_time - delta)
 	combo_link_time = maxf(0.0, combo_link_time - delta)
+	parry_invulnerability_time = maxf(0.0, parry_invulnerability_time - delta)
+	if state not in [PlayerState.DEATH, PlayerState.PARRY] and Input.is_action_just_pressed("block") and not dead:
+		block_press_time = state_time
+		_change_state(PlayerState.BLOCK_START)
+	elif state == PlayerState.BLOCK_START and not Input.is_action_pressed("block"):
+		if state_time <= BLOCK_TAP_PARRY_THRESHOLD:
+			_change_state(PlayerState.PARRY)
+		else:
+			_change_state(PlayerState.UNBLOCK)
+	elif state == PlayerState.BLOCKING and not Input.is_action_pressed("block"):
+		_change_state(PlayerState.UNBLOCK)
+	elif state == PlayerState.UNBLOCK and Input.is_action_pressed("block"):
+		block_press_time = state_time
+		_change_state(PlayerState.BLOCK_START)
 	_read_action_edges()
 	_apply_physics(delta)
 	_update_gameplay_state(delta)
@@ -291,6 +330,13 @@ func _has_held_slide_movement() -> bool:
 	return Input.is_action_pressed("left") or Input.is_action_pressed("right")
 
 func _read_action_edges() -> void:
+	if state in [PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
+		if Input.is_action_just_pressed("dodge") or Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("crouch"):
+			if state == PlayerState.PARRY and block_slowmo_active:
+				pass
+			_change_state(_locomotion_state())
+		else:
+			return
 	if state in [PlayerState.SLIDE_START, PlayerState.SLIDE] and Input.is_action_just_pressed("jump"):
 		crouched = false
 		slide_queued = false
@@ -390,7 +436,7 @@ func _apply_physics(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
 	elif state == PlayerState.DEATH:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
-	elif state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.CROUCH_ATTACK, PlayerState.HIT, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_END]:
+	elif state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.CROUCH_ATTACK, PlayerState.HIT, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_END, PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
 	elif state == PlayerState.DASH:
 		velocity.x = facing * get_effective_move_speed() * 1.7
@@ -431,7 +477,27 @@ func _apply_physics(delta: float) -> void:
 			break
 	if should_apply_wall_entry_lift(was_touching_wall, grounded, horizontal_input, wall_contact_normal):
 		velocity.y = minf(velocity.y, WALL_ENTRY_LIFT_SPEED)
+	if grounded and state == PlayerState.LOCOMOTION and absf(horizontal_input) > 0.01 and absf(wall_contact_normal.x) > 0.7:
+		_try_step_up(horizontal_input)
 	_try_forgiving_mantle()
+
+func _try_step_up(horizontal_input: float) -> bool:
+	var step_direction: float = signf(horizontal_input)
+	var upward_offset: Vector2 = Vector2(0.0, -STEP_UP_HEIGHT)
+	if test_move(global_transform, upward_offset):
+		return false
+	var lifted_transform: Transform2D = global_transform
+	lifted_transform.origin += upward_offset
+	var forward_offset: Vector2 = Vector2(step_direction * STEP_FORWARD_CLEARANCE, 0.0)
+	if test_move(lifted_transform, forward_offset):
+		return false
+	lifted_transform.origin += forward_offset
+	if not test_move(lifted_transform, Vector2(0.0, STEP_UP_HEIGHT + 2.0)):
+		return false
+	global_position = lifted_transform.origin
+	velocity.y = 0.0
+	floor_snap_length = STEP_UP_HEIGHT + 2.0
+	return true
 
 func _try_forgiving_mantle() -> void:
 	if is_on_floor() or wall_contact_normal == Vector2.ZERO or velocity.y < -80.0:
@@ -456,6 +522,20 @@ func _try_forgiving_mantle() -> void:
 	_change_state(_locomotion_state())
 
 func _update_gameplay_state(_delta: float) -> void:
+	if state == PlayerState.BLOCK_START and animated_sprite.animation == &"block" and animated_sprite.frame >= 3:
+		_change_state(PlayerState.BLOCKING if Input.is_action_pressed("block") else PlayerState.UNBLOCK)
+		return
+	if state == PlayerState.BLOCKING:
+		velocity.x = 0.0
+		if not Input.is_action_pressed("block"):
+			_change_state(PlayerState.UNBLOCK)
+		return
+	if state == PlayerState.UNBLOCK and state_time >= 0.28:
+		_change_state(_locomotion_state())
+		return
+	if state == PlayerState.PARRY and state_time >= PARRY_TAP_WINDOW:
+		_change_state(_locomotion_state())
+		return
 	if dead:
 		return
 	if state == PlayerState.HIT:
@@ -560,7 +640,9 @@ func _update_animation() -> void:
 		_set_animation(&"wallclimb_no_movement")
 		return
 	_sync_wall_facing()
-	if state in [PlayerState.WALL_HANG, PlayerState.WALL_CLIMB, PlayerState.WALL_SLIDE]:
+	if state in [PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
+		animated_sprite.position.y = SPRITE_SHIELD_Y
+	elif state in [PlayerState.WALL_HANG, PlayerState.WALL_CLIMB, PlayerState.WALL_SLIDE]:
 		animated_sprite.position.y = SPRITE_WALL_Y
 	elif state in [PlayerState.CROUCH_TRANSITION, PlayerState.CROUCH, PlayerState.CROUCH_ATTACK, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.SLIDE_END]:
 		animated_sprite.position.y = SPRITE_LOW_Y
@@ -603,7 +685,21 @@ func _change_state(next_state: PlayerState) -> void:
 			attack_queued = false
 	if next_state in [PlayerState.HIT, PlayerState.DEATH, PlayerState.FALL]:
 		attack_queued = false
-	if next_state == PlayerState.CROUCH_TRANSITION:
+	if next_state == PlayerState.BLOCK_START:
+		crouched = false
+		velocity.x = 0.0
+		animated_sprite.position.y = SPRITE_SHIELD_Y
+		_set_animation(&"block", true)
+	elif next_state == PlayerState.BLOCKING:
+		animated_sprite.position.y = SPRITE_SHIELD_Y
+		_set_animation(&"blocking", true)
+	elif next_state == PlayerState.UNBLOCK:
+		animated_sprite.position.y = SPRITE_SHIELD_Y
+		_set_animation(&"unblocking", true)
+	elif next_state == PlayerState.PARRY:
+		animated_sprite.position.y = SPRITE_SHIELD_Y
+		_set_animation(&"parry", true)
+	elif next_state == PlayerState.CROUCH_TRANSITION:
 		_set_animation(&"crouch_transition", true)
 	elif next_state == PlayerState.ATTACK1:
 		attack_id += 1
@@ -882,44 +978,121 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		apply_spike_bounce(260.0, spike_direction)
 		return
 	if area.is_in_group("enemy_weapon_hitbox"):
-		receive_hit(false)
-		var direction: float = signf(global_position.x - area.global_position.x)
-		apply_knockback(180.0, direction)
+		var source: Node2D = area if area.get_script() != null else area.get_parent() as Node2D
+		handle_enemy_attack(source, 180.0)
+
+func handle_enemy_attack(attacker: Node2D, knockback_force: float) -> void:
+	if dead or invulnerable_time > 0.0:
+		return
+	var attacker_position: Vector2 = attacker.global_position if is_instance_valid(attacker) else global_position
+	var toward_attacker: float = signf(attacker_position.x - global_position.x)
+	var away_from_attacker: float = -toward_attacker
+	var front_attack: bool = is_zero_approx(toward_attacker) or toward_attacker == float(facing)
+	if front_attack and state == PlayerState.PARRY and state_time <= PARRY_TAP_WINDOW:
+		_perfect_parry(attacker, away_from_attacker)
+		return
+	if front_attack and state in [PlayerState.BLOCK_START, PlayerState.BLOCKING]:
+		if state == PlayerState.BLOCK_START and state_time <= PARRY_WINDOW:
+			_perfect_parry(attacker, away_from_attacker)
+		else:
+			velocity.x = away_from_attacker * 28.0
+			_play_shield_impact(false)
+			_knock_back_attacker(attacker, toward_attacker)
+			receive_blocked_hit()
+		return
+	receive_hit(false)
+	apply_knockback(knockback_force, away_from_attacker)
 
 func apply_spike_bounce(horizontal_force: float, direction: float) -> void:
 	velocity.x = direction * horizontal_force
 	velocity.y = -240.0
 
-func _start_hit_freeze() -> void:
-	if hit_freeze_active:
-		return
-	hit_freeze_active = true
-	var previous_time_scale: float = Engine.time_scale
-	Engine.time_scale = 0.0
-	await get_tree().process_frame
-	await get_tree().process_frame
-	Engine.time_scale = previous_time_scale if previous_time_scale > 0.0 else 1.0
-	hit_freeze_active = false
-
 func _start_hit_slowdown() -> void:
 	if hit_slowdown_active:
 		return
 	hit_slowdown_active = true
-	Engine.time_scale = 0.65
-	var timer: SceneTreeTimer = get_tree().create_timer(0.10, true, false, true)
+	Engine.time_scale = HIT_SLOWMO_SCALE
+	var timer: SceneTreeTimer = get_tree().create_timer(HIT_SLOWMO_DURATION, true, false, true)
 	timer.timeout.connect(_end_hit_slowdown, CONNECT_ONE_SHOT)
 
 func _end_hit_slowdown() -> void:
 	Engine.time_scale = 1.0
 	hit_slowdown_active = false
 
+func _play_shield_impact(parried: bool) -> void:
+	if shield_audio == null:
+		return
+	shield_audio.pitch_scale = PARRY_SOUND_PITCH if parried else 1.0
+	shield_audio.play()
+
+func _knock_back_attacker(enemy: Node2D, away_direction: float) -> void:
+	if not is_instance_valid(enemy):
+		return
+	if enemy.has_method("take_damage"):
+		enemy.call("take_damage", 0, 1, away_direction)
+	if enemy is CharacterBody2D:
+		(enemy as CharacterBody2D).velocity.x = away_direction * BLOCKED_ENEMY_KNOCKBACK
+
+func _perfect_parry(enemy: Node2D, direction: float) -> void:
+	_play_shield_impact(true)
+	_change_state(PlayerState.PARRY)
+	parry_invulnerability_time = PARRY_INVULNERABILITY_DURATION
+	velocity.x = 0.0
+	_start_parry_slowmo()
+	if not is_instance_valid(enemy):
+		return
+	if enemy.has_method("take_damage"):
+		enemy.call("take_damage", 10, 1, -direction)
+	if enemy.is_in_group("enemy") and enemy.get("dead") == true:
+		return
+	if enemy.has_method("stun_from_parry"):
+		enemy.call("stun_from_parry", PARRY_STUN_DURATION)
+	_add_stun_indicator(enemy)
+	if enemy is CharacterBody2D:
+		(enemy as CharacterBody2D).velocity.x = -direction * PARRY_ENEMY_KNOCKBACK
+
+func _add_stun_indicator(enemy: Node2D) -> void:
+	var previous_indicator: Node = enemy.get_node_or_null("ParryStunIndicator")
+	if previous_indicator != null:
+		previous_indicator.queue_free()
+	var indicator: StunIndicator = StunIndicator.new()
+	indicator.name = "ParryStunIndicator"
+	enemy.add_child(indicator)
+	indicator.play_for(PARRY_STUN_DURATION)
+
+func _start_parry_slowmo() -> void:
+	block_slowmo_token += 1
+	var token: int = block_slowmo_token
+	block_slowmo_active = true
+	Engine.time_scale = PARRY_SLOWMO_SCALE
+	var timer: SceneTreeTimer = get_tree().create_timer(PARRY_SLOWMO_DURATION, true, false, true)
+	timer.timeout.connect(func() -> void:
+		if token == block_slowmo_token:
+			Engine.time_scale = 1.0
+			block_slowmo_active = false
+	)
+
+func receive_blocked_hit() -> void:
+	if dead or parry_invulnerability_time > 0.0:
+		return
+	invulnerable_time = 0.18
+	if hurt_audio != null:
+		hurt_audio.play()
+	health = maxi(0, health - 1)
+	health_changed.emit(health, max_health)
+	_start_hit_slowdown()
+	if health <= 0:
+		_change_state(PlayerState.DEATH)
+
 func receive_hit(lethal: bool = false) -> void:
+	if parry_invulnerability_time > 0.0:
+		return
 	if dead or invulnerable_time > 0.0:
 		return
 	if dead:
 		return
 	invulnerable_time = HIT_INVULNERABILITY_DURATION
-	_start_hit_freeze()
+	_start_hit_slowdown()
 	if hurt_audio != null:
 		hurt_audio.play()
 	if lethal:
@@ -938,6 +1111,12 @@ func align_for_charging(socket_position: Vector2) -> void:
 	global_position = socket_position + Vector2(-14.0 * facing, 9.0)
 	velocity = Vector2.ZERO
 	animated_sprite.flip_h = facing < 0
+
+func restore_health_to_max() -> void:
+	if dead:
+		return
+	health = max_health
+	health_changed.emit(health, max_health)
 
 func start_charging(duration: float, finished_callback: Callable = Callable()) -> void:
 	if menu_animation_lock or dead:

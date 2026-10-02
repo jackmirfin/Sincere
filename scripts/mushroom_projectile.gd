@@ -38,10 +38,10 @@ func _on_area_entered(area: Area2D) -> void:
 	if not target.is_in_group("player") or hit_targets.has(target.get_instance_id()):
 		return
 	hit_targets[target.get_instance_id()] = true
-	if target.has_method("receive_hit"):
-		target.receive_hit(false)
-	if target.has_method("apply_knockback"):
-		target.apply_knockback(130.0, signf(target.global_position.x - global_position.x))
+	if target.has_method("handle_enemy_attack"):
+		target.call("handle_enemy_attack", self, 130.0)
+	elif target.has_method("receive_hit"):
+		target.call("receive_hit", false)
 	_impact()
 
 func _impact() -> void:

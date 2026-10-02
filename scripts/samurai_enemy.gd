@@ -206,6 +206,13 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 		if attacker.has_method("apply_hitstop"):
 			attacker.apply_hitstop(hit_stop_duration)
 
+func stun_from_parry(duration: float) -> void:
+	if dead:
+		return
+	hitstun_time = maxf(hitstun_time, duration)
+	_change_state(EnemyState.KNOCKBACK)
+	_set_animation(&"hurt", true)
+
 func take_damage(amount: int, attack_level: int, direction: float) -> void:
 	if dead:
 		return

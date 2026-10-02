@@ -76,15 +76,17 @@ func _explode() -> void:
 		if target == null or hit_nodes.has(target):
 			continue
 		hit_nodes[target] = true
-		if target.has_method("receive_hit"):
+		if target.is_in_group("player") and target.has_method("handle_enemy_attack"):
+			target.call("handle_enemy_attack", self, 150.0)
+		elif target.has_method("receive_hit"):
 			target.call("receive_hit", false)
 		elif target.has_method("take_damage"):
 			target.call("take_damage", damage, 2, signf((target as Node2D).global_position.x - global_position.x))
-	queue_free()
 
 func _on_frame_changed() -> void:
 	if not exploded and animated_sprite.animation == &"bomb" and animated_sprite.frame == 12:
 		_explode()
 
 func _on_animation_finished() -> void:
-	pass
+	if exploded and animated_sprite.animation == &"bomb":
+		queue_free()

@@ -30,17 +30,20 @@ func _on_area_entered(area: Area2D) -> void:
 	if impacted or not area.get_parent().is_in_group("player"):
 		return
 	var target: Node = area.get_parent()
-	if target.has_method("receive_hit"):
+	if target.has_method("handle_enemy_attack"):
+		target.call("handle_enemy_attack", self, 120.0)
+	elif target.has_method("receive_hit"):
 		target.call("receive_hit", false)
-		if target.has_method("apply_knockback"):
-			target.call("apply_knockback", 120.0, signf(target.global_position.x - global_position.x))
 	_impact()
 
 func _on_body_entered(body: Node2D) -> void:
 	if impacted:
 		return
-	if body.is_in_group("player") and body.has_method("receive_hit"):
-		body.call("receive_hit", false)
+	if body.is_in_group("player"):
+		if body.has_method("handle_enemy_attack"):
+			body.call("handle_enemy_attack", self, 120.0)
+		elif body.has_method("receive_hit"):
+			body.call("receive_hit", false)
 		_impact()
 
 func _impact() -> void:

@@ -34,6 +34,7 @@ var health: int = 0
 var facing: int = -1
 var action_index: int = 0
 var action_time: float = 0.0
+var parry_stun_time: float = 0.0
 var shield_time: float = 0.0
 var cast_triggered: bool = false
 var melee_impact_reached: bool = false
@@ -68,6 +69,12 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if dead:
+		return
+	if parry_stun_time > 0.0:
+		parry_stun_time = maxf(0.0, parry_stun_time - delta)
+		_apply_gravity(delta)
+		velocity.x = move_toward(velocity.x, 0.0, 900.0 * delta)
+		move_and_slide()
 		return
 	player = get_tree().get_first_node_in_group("player") as CharacterBody2D
 	_apply_gravity(delta)
@@ -230,6 +237,15 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	hit_effect_index = posmod(hit_effect_index + 1, 3)
 	var damage: int = int(attacker.call("get_attack_damage")) if attacker != null and attacker.has_method("get_attack_damage") else (10 if attack_level == 1 else 20)
 	take_damage(damage)
+
+func stun_from_parry(duration: float) -> void:
+	if dead or state == WizardState.SHIELD:
+		return
+	parry_stun_time = maxf(parry_stun_time, duration)
+	_set_weapon_active(false)
+	spell_overlay.stop_effect()
+	_change_state(WizardState.HURT)
+	_set_animation(&"hurt", true)
 
 func take_damage(amount: int, _attack_level: int = 1, _direction: float = 0.0) -> void:
 	if dead or state == WizardState.SHIELD:

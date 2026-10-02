@@ -27,6 +27,32 @@ func test_pause_battery_uses_artwork_indicator_position() -> void:
 	await get_tree().process_frame
 
 
+func test_pause_battery_uses_health_as_a_fraction_of_maximum() -> void:
+	var menu: PauseMenu = PAUSE_SCENE.instantiate() as PauseMenu
+	add_child(menu)
+	await get_tree().process_frame
+	menu.call("_on_player_health_changed", 3, 12)
+	assert(is_equal_approx(float(menu.get("battery_ratio")), 0.25))
+	menu.queue_free()
+	await get_tree().process_frame
+
+
+func test_charging_socket_restores_health_and_shows_message() -> void:
+	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
+	var socket: ChargingSocket = preload("res://scenes/chargingsocket.tscn").instantiate() as ChargingSocket
+	add_child(player)
+	add_child(socket)
+	await get_tree().process_frame
+	player.health = 2
+	socket.player = player
+	socket.call("_charging_finished")
+	assert(player.health == player.max_health)
+	assert(socket.has_node("ChargeRestoredMessage"))
+	player.queue_free()
+	socket.queue_free()
+	await get_tree().process_frame
+
+
 func test_three_quick_kills_grant_and_refresh_speed_boost() -> void:
 	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
 	add_child(player)

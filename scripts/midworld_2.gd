@@ -4,6 +4,11 @@ class_name Midworld2
 @export var intro_run_distance: float = 40.0
 @export var intro_run_speed: float = 100.0
 
+func _enter_tree() -> void:
+	var pause_menu: PauseMenu = get_node_or_null("PauseLayer/PauseMenu") as PauseMenu
+	if pause_menu != null:
+		pause_menu.skip_startup_sequence = true
+
 func _ready() -> void:
 	var player: PlayerController = get_tree().get_first_node_in_group("player") as PlayerController
 	if player != null:

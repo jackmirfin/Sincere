@@ -32,7 +32,7 @@ func _visible_cable_tops(elevator: Elevator) -> Array[float]:
 func test_twilightcave_wires_an_intro_elevator() -> void:
 	var world: Node2D = _spawn_cave()
 	await get_tree().process_frame
-	var elevator: Elevator = world.get_node_or_null("elevator") as Elevator
+	var elevator: Elevator = world.get_node_or_null("elevators/elevator") as Elevator
 	assert(elevator != null)
 	# The ride starts itself: no lever, and it parks on the level's walkway.
 	assert(elevator.auto_start == true)

@@ -4,11 +4,11 @@ class_name Elevator
 const CABLE_SCENE: PackedScene = preload("res://scenes/elevatorcable.tscn")
 const VACUUM_SOUND: AudioStream = preload("res://assets/sounds/vaccum.mp3")
 
-@export var tiles_per_second: float = 7.0
+@export var tiles_per_second: float = 14.0
 @export var tile_size: float = 16.0
 @export var cable_top_global_y: float = 0.0
 @export var base_volume_db: float = -4.0
-@export var pulley_pitch_scale: float = 1.75
+@export var pulley_pitch_scale: float = 2.0
 @export var pulley_volume_db: float = -11.0
 ## Startup rides need no lever: the platform starts rising as soon as the player
 ## is standing on it (used by the intro elevator that lifts the knight in).

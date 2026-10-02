@@ -164,6 +164,13 @@ func _spawn_projectile() -> void:
 	projectile.global_position = global_position + Vector2(facing * 18.0, 0.0)
 	projectile.call("launch", (player.global_position - projectile.global_position).normalized(), projectile_speed)
 
+func stun_from_parry(duration: float) -> void:
+	if dead:
+		return
+	hitstun_duration = maxf(hitstun_duration, duration)
+	_change_state(EnemyState.HURT)
+	_set_animation(&"hurt", true)
+
 func take_damage(amount: int, _attack_level: int = 1, direction: float = 0.0) -> void:
 	if dead:
 		return

@@ -20,6 +20,12 @@ var input_enabled: bool = false
 var original_zoom: Vector2 = Vector2.ONE
 
 
+func _enter_tree() -> void:
+	var pause_menu: PauseMenu = get_node_or_null("PauseLayer/PauseMenu") as PauseMenu
+	if pause_menu != null:
+		pause_menu.skip_startup_sequence = true
+
+
 func _ready() -> void:
 	npc.collision_layer = 0
 	npc.collision_mask = 2

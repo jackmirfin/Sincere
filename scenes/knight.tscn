@@ -19,9 +19,7 @@ script = ExtResource("2_player_controller")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=305706238]
 position = Vector2(0, -36)
 sprite_frames = ExtResource("1_knight_frames")
-animation = &"shrug"
-frame = 9
-frame_progress = 1.0
+animation = &"hit"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1575968861]
 position = Vector2(-3, -10.5)

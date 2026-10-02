@@ -5,7 +5,7 @@ const COIN_PICKUP_SOUND: AudioStream = preload("res://assets/sounds/coinpickup.m
 
 signal collected(value: int, stable_id: StringName)
 
-@export var attraction_radius: float = 64.0
+@export var attraction_radius: float = 80.0
 @export var attraction_speed: float = 260.0
 @export var attraction_acceleration: float = 900.0
 @export var initial_collection_delay: float = 0.20

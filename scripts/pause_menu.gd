@@ -19,10 +19,11 @@ var skip_startup_sequence: bool = false
 @export var row_height: float = 20.0
 
 const PIXEL_FONT: Font = preload("res://assets/fonts/pixelfont.ttf")
-const SCREEN_COLOR = Color(0.018, 0.075, 0.086, 0.98)
-const SCREEN_BORDER_COLOR = Color(0.12, 0.88, 0.9, 1.0)
-const SCREEN_TEXT_COLOR = Color(0.72, 1.0, 0.96, 1.0)
-const SCREEN_MUTED_COLOR = Color(0.28, 0.66, 0.67, 1.0)
+const SCREEN_COLOR: Color = Color(0.96, 0.97, 0.91, 0.99)
+const SCREEN_BORDER_COLOR: Color = Color(0.29, 0.66, 0.58, 1.0)
+const SCREEN_TEXT_COLOR: Color = Color(0.12, 0.23, 0.22, 1.0)
+const SCREEN_MUTED_COLOR: Color = Color(0.34, 0.48, 0.44, 1.0)
+const SCREEN_ACCENT_COLOR: Color = Color(0.52, 0.83, 0.68, 1.0)
 
 @onready var artwork: TextureRect = $TextureRect
 
@@ -36,7 +37,6 @@ var options_buttons: Array[Button] = []
 var pause_open_pending: bool = false
 var menu_background: Panel
 var selector: ColorRect
-var header_label: Label
 var battery_empty: ColorRect
 var battery_charge: ColorRect
 var battery_ratio: float = 1.0
@@ -81,13 +81,10 @@ func _layout_device() -> void:
 		menu_background.position = content_position
 		menu_background.size = Vector2(screen_width, screen_height)
 		menu_background.scale = Vector2.ONE * content_scale
-		header_label.position = content_position + Vector2(4.0, 3.0) * content_scale
-		header_label.size = Vector2(screen_width - 8.0, 10.0)
-		header_label.scale = Vector2.ONE * content_scale
-		menu_scroll.position = content_position + Vector2(7.0, 14.0) * content_scale
-		menu_scroll.size = Vector2(screen_width - 12.0, screen_height - 17.0)
+		menu_scroll.position = content_position + Vector2(7.0, 3.0) * content_scale
+		menu_scroll.size = Vector2(screen_width - 12.0, screen_height - 3.0)
 		menu_scroll.scale = Vector2.ONE * content_scale
-		selector.position = content_position + Vector2(3.0, 17.0) * content_scale
+		selector.position = content_position + Vector2(3.0, 6.0) * content_scale
 		selector.size = Vector2(2.0, 11.0) * content_scale
 		var artwork_pixel_scale: Vector2 = Vector2(320.0 / 85.0, 308.0 / 85.0) * scale_factor
 		battery_empty.position = device_position + Vector2(53.0, 20.0) * artwork_pixel_scale
@@ -112,16 +109,6 @@ func _build_menu() -> void:
 	menu_background.add_theme_stylebox_override("panel", screen_style)
 	add_child(menu_background)
 
-	header_label = Label.new()
-	header_label.name = "ScreenHeader"
-	header_label.text = "WIND // PAUSED"
-	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	header_label.add_theme_font_override("font", PIXEL_FONT)
-	header_label.add_theme_font_size_override("font_size", 7)
-	header_label.add_theme_color_override("font_color", SCREEN_MUTED_COLOR)
-	header_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(header_label)
-
 	menu_scroll = ScrollContainer.new()
 	menu_scroll.name = "DeviceScreenScroll"
 	menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -133,12 +120,12 @@ func _build_menu() -> void:
 	menu_list = VBoxContainer.new()
 	menu_list.name = "MenuList"
 	menu_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	menu_list.add_theme_constant_override("separation", 1)
+	menu_list.add_theme_constant_override("separation", 3)
 	menu_scroll.add_child(menu_list)
 
 	selector = ColorRect.new()
 	selector.name = "MenuSelector"
-	selector.color = SCREEN_BORDER_COLOR
+	selector.color = SCREEN_ACCENT_COLOR
 	selector.visible = false
 	selector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(selector)
@@ -154,12 +141,12 @@ func _build_menu() -> void:
 
 	battery_empty = ColorRect.new()
 	battery_empty.name = "BatteryInterior"
-	battery_empty.color = Color(0.01, 0.04, 0.04, 1.0)
+	battery_empty.color = Color(0.08, 0.18, 0.15, 1.0)
 	battery_empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(battery_empty)
 	battery_charge = ColorRect.new()
 	battery_charge.name = "BatteryCharge"
-	battery_charge.color = Color(0.9, 1.0, 0.96, 1.0)
+	battery_charge.color = SCREEN_ACCENT_COLOR
 	battery_charge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(battery_charge)
 	_build_coin_counter()
@@ -191,7 +178,7 @@ func _build_coin_counter() -> void:
 	coin_label.add_theme_font_override("font", PIXEL_FONT)
 	coin_label.add_theme_font_size_override("font_size", 11)
 	coin_label.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
-	coin_label.add_theme_color_override("font_outline_color", Color(0.01, 0.04, 0.04, 1.0))
+	coin_label.add_theme_color_override("font_outline_color", SCREEN_COLOR)
 	coin_label.add_theme_constant_override("outline_size", 2)
 	coin_label.position = Vector2(12.0, 0.0)
 	coin_label.size = Vector2(40.0, 22.0)
@@ -200,7 +187,6 @@ func _build_coin_counter() -> void:
 
 func _build_main_menu() -> void:
 	_clear_menu_rows()
-	header_label.text = "WIND // PAUSED"
 	options_visible = false
 	var play_button: Button = _make_button("RESUME", 0)
 	play_button.pressed.connect(resume_game)
@@ -221,7 +207,6 @@ func _turn_off() -> void:
 
 func _show_options() -> void:
 	_clear_menu_rows()
-	header_label.text = "WIND // OPTIONS"
 	options_visible = true
 	var controls_button: Button = _make_button("CONTROLS", 0)
 	controls_button.tooltip_text = "Control settings"
@@ -249,7 +234,7 @@ func _make_button(label_text: String, selector_row: int) -> Button:
 	button.text = label_text
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.set_meta("selector_row", selector_row)
-	button.custom_minimum_size = Vector2(0.0, 12.0)
+	button.custom_minimum_size = Vector2(0.0, 14.0)
 	button.focus_mode = Control.FOCUS_ALL
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.focus_entered.connect(_ensure_button_visible.bind(button))
@@ -257,13 +242,13 @@ func _make_button(label_text: String, selector_row: int) -> Button:
 	button.add_theme_font_override("font", PIXEL_FONT)
 	button.add_theme_font_size_override("font_size", 8)
 	button.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
-	button.add_theme_color_override("font_hover_color", Color(0.02, 0.09, 0.1, 1.0))
-	button.add_theme_color_override("font_focus_color", Color(0.02, 0.09, 0.1, 1.0))
-	button.add_theme_color_override("font_pressed_color", Color(0.02, 0.09, 0.1, 1.0))
-	button.add_theme_stylebox_override("normal", _style_box(Color(0.0, 0.0, 0.0, 0.0), Color(0.08, 0.3, 0.31, 0.6)))
-	button.add_theme_stylebox_override("hover", _style_box(SCREEN_MUTED_COLOR, SCREEN_BORDER_COLOR))
-	button.add_theme_stylebox_override("focus", _style_box(SCREEN_BORDER_COLOR, SCREEN_BORDER_COLOR))
-	button.add_theme_stylebox_override("pressed", _style_box(Color(0.72, 1.0, 0.96, 1.0), SCREEN_BORDER_COLOR))
+	button.add_theme_color_override("font_hover_color", SCREEN_TEXT_COLOR)
+	button.add_theme_color_override("font_focus_color", SCREEN_TEXT_COLOR)
+	button.add_theme_color_override("font_pressed_color", SCREEN_TEXT_COLOR)
+	button.add_theme_stylebox_override("normal", _style_box(Color(0.96, 0.97, 0.91, 0.0), Color(0.29, 0.53, 0.46, 0.25)))
+	button.add_theme_stylebox_override("hover", _style_box(Color(0.84, 0.94, 0.85, 1.0), SCREEN_BORDER_COLOR))
+	button.add_theme_stylebox_override("focus", _style_box(SCREEN_ACCENT_COLOR, SCREEN_BORDER_COLOR))
+	button.add_theme_stylebox_override("pressed", _style_box(Color(0.77, 0.91, 0.78, 1.0), SCREEN_BORDER_COLOR))
 	return button
 
 func _style_box(fill: Color, border: Color) -> StyleBoxFlat:
@@ -325,22 +310,8 @@ func _current_coin_count() -> int:
 		return 0
 	return int(currency.get("total_currency"))
 
-func _on_player_health_changed(current_health: int, _maximum_health: int) -> void:
-	match clampi(current_health, 0, 6):
-		6:
-			battery_ratio = 1.0
-		5:
-			battery_ratio = 0.8
-		4:
-			battery_ratio = 0.6
-		3:
-			battery_ratio = 0.4
-		2:
-			battery_ratio = 0.2
-		1:
-			battery_ratio = 0.02
-		_:
-			battery_ratio = 0.0
+func _on_player_health_changed(current_health: int, maximum_health: int) -> void:
+	battery_ratio = clampf(float(current_health) / float(maximum_health), 0.0, 1.0) if maximum_health > 0 else 0.0
 	if battery_empty != null and battery_charge != null:
 		battery_charge.size = Vector2(battery_empty.size.x * battery_ratio, battery_empty.size.y)
 
@@ -391,7 +362,10 @@ func open_pause_menu() -> void:
 		return
 	pause_open_pending = true
 	var player: Node = get_tree().get_first_node_in_group("player")
-	if player != null and player.has_method("play_menu_animation"):
+	var player_busy: bool = false
+	if player != null:
+		player_busy = bool(player.get("elevator_ride_active")) or bool(player.get("intro_run_active")) or bool(player.get("exit_run_active")) or bool(player.get("teleport_locked"))
+	if player != null and player.has_method("play_menu_animation") and not player_busy:
 		var played: bool = bool(player.call("play_menu_animation", &"pause", Callable(self, "_finish_pause_open")))
 		if played:
 			return
@@ -451,11 +425,12 @@ func _pause_music(should_pause: bool) -> void:
 	var music: AudioStreamPlayer = current_scene.get_node_or_null("BackgroundMusic") as AudioStreamPlayer
 	if music != null:
 		if should_pause:
+			# Keep the playback instance alive; stop() resets the track to its start.
 			music.stream_paused = true
-			music.stop()
 		else:
 			music.stream_paused = false
-			music.play()
+			if not music.playing:
+				music.play()
 
 func _play_put_away_hook() -> void:
 	# Hook for the existing device put-away animation when that animation is added.

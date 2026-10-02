@@ -38,7 +38,12 @@ func should_show_interact_prompt() -> bool:
 	return name == &"teleporter" and scene_root != null and scene_root.scene_file_path == "res://scenes/world.tscn"
 
 func _physics_process(_delta: float) -> void:
-	if player == null or teleporting:
+	if player == null:
+		return
+	if not teleporting and not interaction_area.overlaps_body(player):
+		player = null
+		return
+	if teleporting:
 		return
 	if Input.is_action_just_pressed(interaction_action):
 		_begin_teleport()
@@ -119,6 +124,8 @@ func _on_animation_finished() -> void:
 	teleporting = false
 	if player != null:
 		player.set_teleport_locked(false)
+		if did_teleport:
+			player = null
 
 func _find_receiver() -> Node2D:
 	if not receiver_path.is_empty():

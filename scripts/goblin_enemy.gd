@@ -235,6 +235,13 @@ func _spawn_coin_drop() -> void:
 	}
 	manager.call("drop_at", get_parent(), global_position, profile)
 
+func stun_from_parry(duration: float) -> void:
+	if dead:
+		return
+	hitstun_time = maxf(hitstun_time, duration)
+	_change_state(EnemyState.KNOCKBACK)
+	_set_animation(&"hurt", true)
+
 func take_damage(amount: int, _attack_level: int = 1, direction: float = 0.0) -> void:
 	if dead:
 		return

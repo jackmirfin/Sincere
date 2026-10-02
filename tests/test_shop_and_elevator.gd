@@ -25,13 +25,13 @@ func test_shop_ui_has_the_three_requested_items() -> void:
 	await get_tree().process_frame
 	assert(shop.items.size() == 3)
 	assert(String(shop.items[0]["name"]) == "Whetstone")
-	assert(int(shop.items[0]["price"]) == 110)
+	assert(int(shop.items[0]["price"]) == 330)
 	assert(String(shop.items[0]["desc"]) == "Increase melee damage.")
 	assert(String(shop.items[1]["name"]) == "Portable Charger")
-	assert(int(shop.items[1]["price"]) == 125)
+	assert(int(shop.items[1]["price"]) == 375)
 	assert(String(shop.items[1]["desc"]) == "Increase max health")
 	assert(String(shop.items[2]["name"]) == "Coffee")
-	assert(int(shop.items[2]["price"]) == 45)
+	assert(int(shop.items[2]["price"]) == 135)
 	assert(String(shop.items[2]["desc"]) == "Increase movement speed")
 	assert(shop.item_buttons.size() == 3)
 	assert(shop.item_icons.size() == 3)
@@ -71,17 +71,17 @@ func test_buying_spends_coins_applies_effect_and_is_single_use() -> void:
 	var shop: ShopUI = SHOP_UI_SCENE.instantiate() as ShopUI
 	add_child(shop)
 	await get_tree().process_frame
-	currency.set("total_currency", 500)
+	currency.set("total_currency", 2000)
 	shop.open(player)
 	assert(shop.shop_open)
 
 	var base_damage: int = player.get_attack_damage()
 	shop.selected_index = 0
 	assert(shop.buy() == true)
-	assert(int(currency.get("total_currency")) == 390)
+	assert(int(currency.get("total_currency")) == 1670)
 	assert(player.get_attack_damage() == base_damage + 5)
 	assert(shop.buy() == false)
-	assert(int(currency.get("total_currency")) == 390)
+	assert(int(currency.get("total_currency")) == 1670)
 
 	var base_speed: float = player.get_effective_move_speed()
 	shop.selected_index = 2
@@ -146,13 +146,13 @@ func test_midworld_2_wires_shop_elevator_and_exit() -> void:
 	world.queue_free()
 	await get_tree().process_frame
 
-func test_elevator_needs_lever_and_rider_then_rises_at_seven_tiles_per_second() -> void:
+func test_elevator_needs_lever_and_rider_then_rises_at_fourteen_tiles_per_second() -> void:
 	var world: Node2D = MIDWORLD2_SCENE.instantiate() as Node2D
 	add_child(world)
 	await get_tree().process_frame
 	var elevator: Elevator = world.get_node("elevator") as Elevator
 	assert(elevator != null)
-	assert(elevator.tiles_per_second == 7.0)
+	assert(elevator.tiles_per_second == 14.0)
 	var expected_cables: int = int(ceil(elevator.global_position.y / 16.0)) + 1
 	assert(elevator.cables.size() == expected_cables)
 	assert(elevator.cables.size() > 1)
@@ -174,8 +174,8 @@ func test_elevator_needs_lever_and_rider_then_rises_at_seven_tiles_per_second() 
 	var start_y: float = elevator.global_position.y
 	var start_rider_y: float = rider.global_position.y
 	elevator.call("_physics_process", 1.0)
-	assert(is_equal_approx(elevator.global_position.y, start_y - 7.0 * 16.0))
-	assert(is_equal_approx(rider.global_position.y, start_rider_y - 7.0 * 16.0))
+	assert(is_equal_approx(elevator.global_position.y, start_y - 14.0 * 16.0))
+	assert(is_equal_approx(rider.global_position.y, start_rider_y - 14.0 * 16.0))
 
 	rider.queue_free()
 	world.queue_free()
@@ -190,7 +190,7 @@ func test_elevator_cable_animations_and_pulley_tuning() -> void:
 	assert(elevator.audio.pitch_scale == 1.0)
 	for cable: AnimatedSprite2D in elevator.cables:
 		assert(cable.animation == &"idle")
-	assert(elevator.pulley_pitch_scale > 1.0)
+	assert(elevator.pulley_pitch_scale == 2.0)
 	assert(elevator.pulley_volume_db < elevator.base_volume_db)
 	elevator.call("_start_pulley_sound")
 	assert(elevator.audio.pitch_scale == elevator.pulley_pitch_scale)

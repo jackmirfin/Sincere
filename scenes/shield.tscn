@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://nb20paq7dsgw"]
+
+[ext_resource type="Texture2D" uid="uid://b6l5gk6ndtc14" path="res://assets/items/shield.png" id="1_vtru8"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xrivr"]
+radius = 31.016125
+
+[node name="shield" type="Area2D" unique_id=1597909002]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2098367234]
+rotation = 0.24783675
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("1_vtru8")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1369014236]
+shape = SubResource("CircleShape2D_xrivr")

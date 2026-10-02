@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://binlombejfjjd" path="res://scripts/elevator.gd" id="11_elevator"]
 [ext_resource type="Script" uid="uid://fogswjvmkrki" path="res://scripts/level_end.gd" id="12_levelend"]
 [ext_resource type="PackedScene" uid="uid://do2cfn5as8s5s" path="res://scenes/chargingsocket.tscn" id="15_qufpx"]
+[ext_resource type="PackedScene" uid="uid://batbhuwlre4a4" path="res://scenes/control.tscn" id="16_pause_menu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3o544"]
 texture = ExtResource("2_wa0sa")
@@ -8753,3 +8754,8 @@ shape = SubResource("RectangleShape2D_13qdw")
 
 [node name="chargingsocket" parent="." unique_id=1872127858 instance=ExtResource("15_qufpx")]
 position = Vector2(841, 129)
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="PauseMenu" parent="PauseLayer" instance=ExtResource("16_pause_menu")]

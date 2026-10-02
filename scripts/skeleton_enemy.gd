@@ -219,6 +219,13 @@ func _finalize_death_collision_cleanup() -> void:
 	passthrough_player = null
 
 
+func stun_from_parry(duration: float) -> void:
+	if dead:
+		return
+	hitstun_time = maxf(hitstun_time, duration)
+	_change_state(EnemyState.KNOCKBACK)
+	_set_animation(&"hurt", true)
+
 func take_damage(amount: int, _attack_level: int = 1, direction: float = 0.0) -> void:
 	if dead:
 		return

@@ -74,9 +74,9 @@ func _ready() -> void:
 
 func default_items() -> Array[Dictionary]:
 	return [
-		{"id": &"whetstone", "name": "Whetstone", "price": 110, "desc": "Increase melee damage.", "icon": "res://assets/items/whetstone.png"},
-		{"id": &"portablecharger", "name": "Portable Charger", "price": 125, "desc": "Increase max health", "icon": "res://assets/items/portablecharger.png"},
-		{"id": &"coffee", "name": "Coffee", "price": 45, "desc": "Increase movement speed", "icon": "res://assets/items/coffee.png"},
+		{"id": &"whetstone", "name": "Whetstone", "price": 330, "desc": "Increase melee damage.", "icon": "res://assets/items/whetstone.png"},
+		{"id": &"portablecharger", "name": "Portable Charger", "price": 375, "desc": "Increase max health", "icon": "res://assets/items/portablecharger.png"},
+		{"id": &"coffee", "name": "Coffee", "price": 135, "desc": "Increase movement speed", "icon": "res://assets/items/coffee.png"},
 	]
 
 func _build() -> void:

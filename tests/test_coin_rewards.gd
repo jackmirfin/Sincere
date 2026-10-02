@@ -11,8 +11,16 @@ func test_cave_reward_room_contains_three_chests() -> void:
 		if child is TreasureChest:
 			chests.append(child)
 	assert(chests.size() == 3)
+	var expected_positions: Array[Vector2] = [
+		Vector2(2743.0, 530.0),
+		Vector2(2843.0, 530.0),
+		Vector2(2943.0, 530.0),
+	]
+	var actual_positions: Array[Vector2] = []
 	for chest: Node in chests:
-		assert((chest as Node2D).position.x > 3000.0)
+		actual_positions.append((chest as Node2D).position)
+	actual_positions.sort_custom(func(left: Vector2, right: Vector2) -> bool: return left.x < right.x)
+	assert(actual_positions == expected_positions)
 	cave.free()
 
 
