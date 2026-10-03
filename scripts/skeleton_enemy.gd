@@ -4,6 +4,8 @@ class_name SkeletonEnemy
 enum EnemyState { IDLE, CHASE, SHIELD, ATTACK_WINDUP, ATTACK_ACTIVE, ATTACK_RECOVERY, HURT, KNOCKBACK, DEAD }
 
 const ENEMY_HURT_SOUND: AudioStream = preload("res://assets/sounds/enemyhurt.mp3")
+const SKELETON_SWING_SOUND: AudioStream = preload("res://assets/sounds/skeletonswordswing.mp3")
+const SWING_VOLUME_DB: float = -1.94
 const ATTACK_INDICATOR_SCENE: PackedScene = preload("res://scenes/attackindicator.tscn")
 const SHIELD_IMPACT_SOUND: AudioStream = preload("res://assets/sounds/shieldimpact.mp3")
 const GRAVITY: float = 1250.0
@@ -44,6 +46,7 @@ var dead: bool = false
 var coin_drop_generated: bool = false
 var player: CharacterBody2D
 var hurt_audio: AudioStreamPlayer2D
+var swing_audio: AudioStreamPlayer2D
 var shield_audio: AudioStreamPlayer2D
 var hit_effect_index: int = 0
 var attack_impact_reached: bool = false
@@ -55,8 +58,13 @@ func _ready() -> void:
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = ENEMY_HURT_SOUND
 	hurt_audio.volume_db = 4.0
-	hurt_audio.pitch_scale = 1.15
+	hurt_audio.pitch_scale = 1.17
 	add_child(hurt_audio)
+	swing_audio = AudioStreamPlayer2D.new()
+	swing_audio.name = "SkeletonSwordSwingSound"
+	swing_audio.stream = SKELETON_SWING_SOUND
+	swing_audio.volume_db = SWING_VOLUME_DB
+	add_child(swing_audio)
 	shield_audio = AudioStreamPlayer2D.new()
 	shield_audio.stream = SHIELD_IMPACT_SOUND
 	shield_audio.volume_db = 4.0
@@ -188,6 +196,7 @@ func _change_state(next_state: EnemyState) -> void:
 			attack_index = 1 - attack_index
 			_set_animation(current_attack, true)
 		EnemyState.ATTACK_ACTIVE:
+			swing_audio.play()
 			_set_animation(current_attack)
 		EnemyState.HURT, EnemyState.KNOCKBACK:
 			_set_animation(&"hurt", true)

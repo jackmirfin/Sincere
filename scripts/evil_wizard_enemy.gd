@@ -9,6 +9,7 @@ const ATTACK_INDICATOR_SCENE: PackedScene = preload("res://scenes/attackindicato
 const ENEMY_HURT_SOUND: AudioStream = preload("res://assets/sounds/enemyhurt.mp3")
 const GRAVITY: float = 1250.0
 const MELEE_IMPACT_FRAME: int = 5
+const ATTACK_WOOSH_PITCH: float = 0.75
 const CAST_TRIGGER_FRAME: int = 4
 const ACTION_SCRIPT: Array[ScriptedAction] = [ScriptedAction.THUNDER, ScriptedAction.TELEPORT, ScriptedAction.SHIELD, ScriptedAction.THUNDER]
 
@@ -46,6 +47,7 @@ var struck_attack_ids: Dictionary = {}
 var hit_effect_index: int = 0
 var spell_overlay: EvilWizardSpellEffect
 var hurt_audio: AudioStreamPlayer2D
+var attack_woosh_audio: AudioStreamPlayer2D
 
 func _ready() -> void:
 	add_to_group("enemy")
@@ -64,7 +66,9 @@ func _ready() -> void:
 	add_child(spell_overlay)
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = ENEMY_HURT_SOUND
+	hurt_audio.pitch_scale = 1.02
 	add_child(hurt_audio)
+	attack_woosh_audio = EnemyAttackAudio.create_player(self, ATTACK_WOOSH_PITCH)
 	_set_animation(&"idle", true)
 
 func _physics_process(delta: float) -> void:
@@ -113,6 +117,7 @@ func _choose_next_action() -> void:
 	_start_cast(scripted_action)
 
 func _start_melee() -> void:
+	attack_woosh_audio.play()
 	_change_state(WizardState.MELEE)
 	melee_impact_reached = false
 	struck_attack_ids.clear()
@@ -120,6 +125,7 @@ func _start_melee() -> void:
 	_set_animation(&"attack", true)
 
 func _start_cast(action: ScriptedAction) -> void:
+	attack_woosh_audio.play()
 	current_action = action
 	cast_triggered = false
 	_change_state(WizardState.CAST)

@@ -24,12 +24,12 @@ func test_cave_reward_room_contains_three_chests() -> void:
 	cave.free()
 
 
-func test_chest_reward_is_tripled() -> void:
+func test_chest_reward_is_halved() -> void:
 	var cave: Node2D = CAVE_SCENE.instantiate() as Node2D
 	var chest: TreasureChest = cave.get_node("interactables/chest") as TreasureChest
 	var profile: Dictionary = chest.get_drop_profile()
-	assert(int(profile["min_coins"]) == chest.coin_count_min * 3)
-	assert(int(profile["max_coins"]) == chest.coin_count_max * 3)
+	assert(int(profile["min_coins"]) == int(chest.coin_count_min * chest.coin_amount_multiplier / 2.0))
+	assert(int(profile["max_coins"]) == int(chest.coin_count_max * chest.coin_amount_multiplier / 2.0))
 	cave.free()
 
 

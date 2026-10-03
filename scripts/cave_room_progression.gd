@@ -75,16 +75,32 @@ func _all_enemies_defeated(enemies: Array[Node2D]) -> bool:
 
 func _on_lever1_flipped() -> void:
 	room1_gate2.open_gate()
+	_pan_to_gate(room1_gate2)
 	_evaluate_hallway_gate()
 
 
 func _on_lever2_flipped() -> void:
+	_pan_to_gate(hallway_gate)
 	_evaluate_hallway_gate()
 
 
 func _on_lever3_flipped() -> void:
 	room2_gate2.open_gate()
+	_pan_to_gate(room2_gate2)
 	_evaluate_hallway_gate()
+
+
+func _pan_to_gate(gate: CaveGate) -> void:
+	var player: PlayerController = get_node_or_null("../knight") as PlayerController
+	if player == null:
+		return
+	var camera: Camera2D = player.get_node_or_null("Camera2D") as Camera2D
+	if camera == null or not camera.is_current():
+		return
+	var target_offset: Vector2 = gate.global_position - player.global_position
+	var pan: Tween = create_tween()
+	pan.tween_property(camera, "offset", target_offset, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pan.tween_property(camera, "offset", Vector2.ZERO, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 func _evaluate_hallway_gate() -> void:

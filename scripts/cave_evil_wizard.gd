@@ -17,8 +17,10 @@ const FLYING_EYE_SCENE: PackedScene = preload("res://scenes/flyingeye.tscn")
 const GOBLIN_SCENE: PackedScene = preload("res://scenes/goblin.tscn")
 const MUSHROOM_SCENE: PackedScene = preload("res://scenes/mushroom.tscn")
 const SKELETON_SCENE: PackedScene = preload("res://scenes/skeleton.tscn")
+const LAB_NOTES_BOOK_SCENE: PackedScene = preload("res://scenes/labnotesbook.tscn")
 const GRAVITY: float = 1250.0
 const MELEE_IMPACT_FRAME: int = 5
+const ATTACK_WOOSH_PITCH: float = 0.70
 const CAST_TRIGGER_FRAME: int = 4
 
 @export var max_health: int = 180
@@ -29,7 +31,7 @@ const CAST_TRIGGER_FRAME: int = 4
 @export var thunder_spacing: float = 58.0
 @export var final_thunder_interval: float = 4.0
 @export var summon_spawn_interval: float = 0.45
-@export var death_slowmo_scale: float = 0.35
+@export var death_slowmo_scale: float = 0.25
 @export var coin_drop_multiplier: int = 14
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -66,6 +68,8 @@ var struck_attack_ids: Dictionary = {}
 var hit_effect_index: int = 0
 var spell_overlay: EvilWizardSpellEffect = null
 var hurt_audio: AudioStreamPlayer2D = null
+var attack_woosh_audio: AudioStreamPlayer2D = null
+var lab_notes_book: LabNotesBook = null
 
 func _ready() -> void:
 	add_to_group("enemy")
@@ -83,7 +87,9 @@ func _ready() -> void:
 	add_child(spell_overlay)
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = ENEMY_HURT_SOUND
+	hurt_audio.pitch_scale = 1.02
 	add_child(hurt_audio)
+	attack_woosh_audio = EnemyAttackAudio.create_player(self, ATTACK_WOOSH_PITCH)
 	_set_animation(&"idle", true)
 
 func set_encounter_dormant() -> void:
@@ -215,6 +221,7 @@ func _drop_to_lower_arena() -> void:
 	velocity = Vector2.ZERO
 
 func _start_melee() -> void:
+	attack_woosh_audio.play()
 	_change_state(WizardState.MELEE)
 	melee_impact_reached = false
 	struck_attack_ids.clear()
@@ -222,6 +229,7 @@ func _start_melee() -> void:
 	_set_animation(&"attack", true)
 
 func _start_cast(action: ScriptedAction) -> void:
+	attack_woosh_audio.play()
 	current_action = action
 	cast_triggered = false
 	velocity.x = 0.0
@@ -461,6 +469,7 @@ func _die() -> void:
 	body_collision.set_deferred("disabled", true)
 	_set_animation(&"death", true)
 	_drop_death_coins()
+	_drop_lab_notes_book()
 	_run_death_sequence()
 
 
@@ -476,6 +485,15 @@ func _drop_death_coins() -> void:
 			"max_types": 3,
 			"value_multiplier": 1.5,
 		})
+
+
+func _drop_lab_notes_book() -> void:
+	if lab_notes_book != null or get_parent() == null:
+		return
+	lab_notes_book = LAB_NOTES_BOOK_SCENE.instantiate() as LabNotesBook
+	lab_notes_book.name = "LabNotesBook"
+	get_parent().add_child(lab_notes_book)
+	lab_notes_book.global_position = global_position + Vector2(18.0, -8.0)
 
 
 func _run_death_sequence() -> void:

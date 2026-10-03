@@ -46,7 +46,7 @@ func test_twilightcave_wires_an_intro_elevator() -> void:
 func test_platform_starts_under_the_knight_and_meets_the_walkway() -> void:
 	var world: Node2D = _spawn_cave()
 	await get_tree().process_frame
-	var elevator: Elevator = world.get_node("elevator") as Elevator
+	var elevator: Elevator = world.get_node("elevators/elevator") as Elevator
 	var platform: TileMapLayer = elevator.get_node("elevatorplatform") as TileMapLayer
 	var knight: PlayerController = world.get_node("knight") as PlayerController
 	# The knight starts standing on the platform, well below the level art.
@@ -103,7 +103,7 @@ func test_camera_shows_the_ride_without_leaving_the_level_art() -> void:
 func test_intro_ride_raises_the_knight_and_parks_on_the_walkway() -> void:
 	var world: Node2D = _spawn_cave()
 	var knight: PlayerController = world.get_node("knight") as PlayerController
-	var elevator: Elevator = world.get_node("elevator") as Elevator
+	var elevator: Elevator = world.get_node("elevators/elevator") as Elevator
 	var start_x: float = knight.global_position.x
 	var start_y: float = knight.global_position.y
 	assert(start_y > TwilightCave.ELEVATOR_STOP_Y)
@@ -135,7 +135,7 @@ func test_intro_ride_raises_the_knight_and_parks_on_the_walkway() -> void:
 
 func test_intro_cables_stay_anchored_to_the_shaft_ceiling() -> void:
 	var world: Node2D = _spawn_cave()
-	var elevator: Elevator = world.get_node("elevator") as Elevator
+	var elevator: Elevator = world.get_node("elevators/elevator") as Elevator
 	await get_tree().process_frame
 	var anchor: float = TwilightCave.CABLE_ANCHOR_Y
 	var start_visible: int = _visible_cable_tops(elevator).size()

@@ -1,9 +1,9 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://e3jth8obbcf2"]
 
-[ext_resource type="Texture2D" uid="uid://c5usq1posh7a1" path="res://assets/characters/samurai/Sprites/ATTACK 1.png" id="1_nnyyg"]
-[ext_resource type="Texture2D" uid="uid://dwknharvn0n4" path="res://assets/characters/samurai/Sprites/HURT.png" id="2_7u887"]
-[ext_resource type="Texture2D" uid="uid://cxe0xsrkvujee" path="res://assets/characters/samurai/Sprites/IDLE.png" id="3_8ciw7"]
-[ext_resource type="Texture2D" uid="uid://cesj66mfhqi4b" path="res://assets/characters/samurai/Sprites/RUN.png" id="4_8526w"]
+[ext_resource type="Texture2D" uid="uid://c5usq1posh7a1" path="res://assets/characters/boss_enemies/samurai/Sprites/ATTACK 1.png" id="1_nnyyg"]
+[ext_resource type="Texture2D" uid="uid://dwknharvn0n4" path="res://assets/characters/boss_enemies/samurai/Sprites/HURT.png" id="2_7u887"]
+[ext_resource type="Texture2D" uid="uid://cxe0xsrkvujee" path="res://assets/characters/boss_enemies/samurai/Sprites/IDLE.png" id="3_8ciw7"]
+[ext_resource type="Texture2D" uid="uid://cesj66mfhqi4b" path="res://assets/characters/boss_enemies/samurai/Sprites/RUN.png" id="4_8526w"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2cs24"]
 atlas = ExtResource("1_nnyyg")

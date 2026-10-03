@@ -31,7 +31,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if opened or not area.is_in_group("player_attack_hitbox"):
 		return
 	opened = true
-	monitoring = false
+	set_deferred("monitoring", false)
 	animated_sprite.play(&"opening")
 
 func _on_animation_finished() -> void:
@@ -42,8 +42,8 @@ func _on_animation_finished() -> void:
 func get_drop_profile() -> Dictionary:
 	return {
 		"drop_chance": 1.0,
-		"min_coins": coin_count_min * coin_amount_multiplier,
-		"max_coins": coin_count_max * coin_amount_multiplier,
+		"min_coins": int(coin_count_min * coin_amount_multiplier / 2.0),
+		"max_coins": int(coin_count_max * coin_amount_multiplier / 2.0),
 		"min_types": 2,
 		"max_types": 5,
 		"value_multiplier": 1.0

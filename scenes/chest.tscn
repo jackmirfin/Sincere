@@ -46,7 +46,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_chest"]
-size = Vector2(30, 24)
+size = Vector2(34, 30)
 
 [node name="chest" type="Area2D"]
 collision_layer = 8
@@ -61,5 +61,5 @@ animation = &"shut"
 autoplay = "shut"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -12)
+position = Vector2(0, -18)
 shape = SubResource("RectangleShape2D_chest")

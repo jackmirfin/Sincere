@@ -43,18 +43,21 @@ var dead: bool = false
 var coin_drop_generated: bool = false
 var player: CharacterBody2D
 var hurt_audio: AudioStreamPlayer2D
+var attack_woosh_audio: AudioStreamPlayer2D
 var hit_effect_index: int = 0
 var jump_cooldown_time: float = 0.0
 var attack_impact_reached: bool = false
 const MELEE_IMPACT_FRAME: int = 6
+const ATTACK_WOOSH_PITCH: float = 1.05
 const PROJECTILE_RELEASE_FRAME: int = 6
 
 func _ready() -> void:
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = ENEMY_HURT_SOUND
 	hurt_audio.volume_db = 4.0
-	hurt_audio.pitch_scale = 1.15
+	hurt_audio.pitch_scale = 1.17
 	add_child(hurt_audio)
+	attack_woosh_audio = EnemyAttackAudio.create_player(self, ATTACK_WOOSH_PITCH)
 	add_to_group("enemy")
 	health = max_health
 	weapon_shape.disabled = true
@@ -167,7 +170,7 @@ func _change_state(next_state: EnemyState) -> void:
 				_set_animation(&"attack" if melee_attack_index == 0 else &"attack2", true)
 				melee_attack_index = 1 - melee_attack_index
 		EnemyState.ATTACK_ACTIVE:
-			pass
+			attack_woosh_audio.play()
 		EnemyState.ATTACK_RECOVERY:
 			_set_weapon_active(false)
 		EnemyState.HURT, EnemyState.KNOCKBACK:

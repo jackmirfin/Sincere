@@ -8,17 +8,19 @@ var skip_startup_sequence: bool = false
 @export_range(0.1, 1.5) var screen_fraction: float = 0.8
 @export var device_scale_multiplier: float = 1.25
 @export var device_vertical_offset: float = 0.0
-@export_range(0.5, 1.0) var menu_content_scale: float = 0.9
+@export_range(0.5, 1.0) var menu_content_scale: float = 1.0
 @export var menu_content_vertical_offset: float = -14.0
 @export var device_animation_path: NodePath
 @export var device_on_animation: StringName = &"turn_on"
-@export var screen_left: float = 113.0
-@export var screen_top: float = 103.0
-@export var screen_width: float = 104.0
-@export var screen_height: float = 62.0
+@export var screen_left: float = 106.0
+@export var screen_top: float = 77.0
+@export var screen_width: float = 112.0
+@export var screen_height: float = 93.0
 @export var row_height: float = 20.0
 
-const PIXEL_FONT: Font = preload("res://assets/fonts/pixelfont.ttf")
+const PIXEL_FONT: FontFile = preload("res://assets/fonts/pixelfont.ttf")
+
+var pause_pixel_font: FontFile = PIXEL_FONT.duplicate() as FontFile
 const SCREEN_COLOR: Color = Color(0.96, 0.97, 0.91, 0.99)
 const SCREEN_BORDER_COLOR: Color = Color(0.29, 0.66, 0.58, 1.0)
 const SCREEN_TEXT_COLOR: Color = Color(0.12, 0.23, 0.22, 1.0)
@@ -39,6 +41,7 @@ var menu_background: Panel
 var selector: ColorRect
 var battery_empty: ColorRect
 var battery_charge: ColorRect
+var charge_label: Label
 var battery_ratio: float = 1.0
 var tracked_player: PlayerController = null
 var coin_row: Control
@@ -47,10 +50,13 @@ var coin_label: Label
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pause_pixel_font.set("antialiasing", 0)
 	artwork.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	artwork.position = Vector2.ZERO
 	artwork.size = Vector2(320.0, 308.0)
 	_build_menu()
+	artwork.move_to_front()
 	_layout_device()
 	get_viewport().size_changed.connect(_layout_device)
 	_connect_device_animation()
@@ -81,19 +87,20 @@ func _layout_device() -> void:
 		menu_background.position = content_position
 		menu_background.size = Vector2(screen_width, screen_height)
 		menu_background.scale = Vector2.ONE * content_scale
-		menu_scroll.position = content_position + Vector2(7.0, 3.0) * content_scale
-		menu_scroll.size = Vector2(screen_width - 12.0, screen_height - 3.0)
+		menu_scroll.position = content_position + Vector2(7.0, 25.0) * content_scale
+		menu_scroll.size = Vector2(screen_width - 12.0, screen_height - 29.0)
 		menu_scroll.scale = Vector2.ONE * content_scale
-		selector.position = content_position + Vector2(3.0, 6.0) * content_scale
+		selector.position = content_position + Vector2(3.0, 28.0) * content_scale
 		selector.size = Vector2(2.0, 11.0) * content_scale
-		var artwork_pixel_scale: Vector2 = Vector2(320.0 / 85.0, 308.0 / 85.0) * scale_factor
-		battery_empty.position = device_position + Vector2(53.0, 20.0) * artwork_pixel_scale
-		battery_empty.size = Vector2(3.0, 1.0) * artwork_pixel_scale
+		battery_empty.position = content_position + Vector2(8.0, 15.0) * content_scale
+		battery_empty.size = Vector2(screen_width - 64.0, 3.0) * content_scale
 		battery_charge.position = battery_empty.position
 		battery_charge.size = Vector2(battery_empty.size.x * battery_ratio, battery_empty.size.y)
+		charge_label.position = content_position + Vector2(8.0, 3.0) * content_scale
+		charge_label.size = Vector2(68.0, 10.0) * content_scale
 	if coin_row != null:
-		# Sit the coin count on the device screen strip, just left of the battery.
-		coin_row.position = device_position + Vector2(143.0, 66.0) * scale_factor
+		# Keep the coin counter in the upper-right status area of the rebuilt display.
+		coin_row.position = device_position + Vector2(screen_left + screen_width - 52.0, screen_top + 2.0) * scale_factor
 		coin_row.scale = Vector2.ONE * scale_factor
 
 func _build_menu() -> void:
@@ -131,9 +138,9 @@ func _build_menu() -> void:
 	add_child(selector)
 
 	title_label = Label.new()
-	title_label.text = "PAUSED"
-	title_label.visible = false
-	title_label.add_theme_font_override("font", PIXEL_FONT)
+	title_label.text = "MP3 PAUSED"
+	title_label.visible = true
+	title_label.add_theme_font_override("font", pause_pixel_font)
 	title_label.add_theme_font_size_override("font_size", 7)
 	title_label.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
 	title_label.custom_minimum_size = Vector2.ZERO
@@ -149,6 +156,14 @@ func _build_menu() -> void:
 	battery_charge.color = SCREEN_ACCENT_COLOR
 	battery_charge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(battery_charge)
+	charge_label = Label.new()
+	charge_label.name = "ChargeLabel"
+	charge_label.text = "CHARGE 100%"
+	charge_label.add_theme_font_override("font", pause_pixel_font)
+	charge_label.add_theme_font_size_override("font_size", 10)
+	charge_label.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
+	charge_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(charge_label)
 	_build_coin_counter()
 	_build_main_menu()
 
@@ -175,7 +190,7 @@ func _build_coin_counter() -> void:
 	coin_label.name = "CoinCount"
 	coin_label.text = "0"
 	coin_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	coin_label.add_theme_font_override("font", PIXEL_FONT)
+	coin_label.add_theme_font_override("font", pause_pixel_font)
 	coin_label.add_theme_font_size_override("font_size", 11)
 	coin_label.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
 	coin_label.add_theme_color_override("font_outline_color", SCREEN_COLOR)
@@ -239,7 +254,7 @@ func _make_button(label_text: String, selector_row: int) -> Button:
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.focus_entered.connect(_ensure_button_visible.bind(button))
 	button.focus_entered.connect(_update_selector_for_button.bind(button))
-	button.add_theme_font_override("font", PIXEL_FONT)
+	button.add_theme_font_override("font", pause_pixel_font)
 	button.add_theme_font_size_override("font_size", 8)
 	button.add_theme_color_override("font_color", SCREEN_TEXT_COLOR)
 	button.add_theme_color_override("font_hover_color", SCREEN_TEXT_COLOR)
@@ -312,6 +327,8 @@ func _current_coin_count() -> int:
 
 func _on_player_health_changed(current_health: int, maximum_health: int) -> void:
 	battery_ratio = clampf(float(current_health) / float(maximum_health), 0.0, 1.0) if maximum_health > 0 else 0.0
+	if charge_label != null:
+		charge_label.text = "CHARGE %d%%" % roundi(battery_ratio * 100.0)
 	if battery_empty != null and battery_charge != null:
 		battery_charge.size = Vector2(battery_empty.size.x * battery_ratio, battery_empty.size.y)
 

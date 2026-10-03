@@ -4,6 +4,27 @@ class_name TestCaveOpening
 const CAVE_SCENE: PackedScene = preload("res://scenes/cave.tscn")
 const CAVE_MUSIC: AudioStream = preload("res://assets/sounds/cave1.mp3")
 
+func test_cave_layers_use_twilight_parallax_depths() -> void:
+	var cave: CaveIntroSequence = CAVE_SCENE.instantiate() as CaveIntroSequence
+	cave.sequence_finished = true
+	add_child(cave)
+	await get_tree().process_frame
+	var background_parallax: Parallax2D = cave.get_node("BackgroundParallax") as Parallax2D
+	var light_parallax: Parallax2D = cave.get_node("lightparallax") as Parallax2D
+	var background: TileMapLayer = background_parallax.get_node("background") as TileMapLayer
+	var light: TileMapLayer = light_parallax.get_node("light") as TileMapLayer
+	var platforms: TileMapLayer = cave.get_node("platforms") as TileMapLayer
+	assert(background != null and light != null)
+	assert(is_equal_approx(background_parallax.scroll_scale.x, 0.92))
+	assert(is_equal_approx(background_parallax.scroll_scale.y, 0.92))
+	assert(is_equal_approx(light_parallax.scroll_scale.x, 0.96))
+	assert(is_equal_approx(light_parallax.scroll_scale.y, 0.96))
+	assert(platforms.get_parent() == cave, "Collidable platforms should remain fixed in world space")
+	assert(light_parallax.scroll_scale.x > background_parallax.scroll_scale.x)
+	assert(light_parallax.scroll_scale.x < 1.0)
+	cave.queue_free()
+	await get_tree().process_frame
+
 func test_cave_opening_routes_to_all_levers_and_boss() -> void:
 	var cave: Node2D = CAVE_SCENE.instantiate() as Node2D
 	add_child(cave)
@@ -17,9 +38,11 @@ func test_cave_opening_routes_to_all_levers_and_boss() -> void:
 		NodePath("bossfight/evilwizard"),
 	])
 	assert(sequence.STOP_DURATION == 0.3)
-	assert(sequence.BOSS_DIALOGUE.size() == 13)
+	assert(sequence.BOSS_DIALOGUE.size() == 9)
 	assert(sequence.BOSS_DIALOGUE[0]["text"] == "How fares she?")
-	assert(sequence.BOSS_DIALOGUE[11]["text"] == "He is already here.")
+	assert(sequence.BOSS_DIALOGUE[7]["text"] == "He is already here.")
+	for line: Dictionary in sequence.BOSS_DIALOGUE:
+		assert(not str(line["text"]) in ["You said the first course might be enough.", "It was not.", "It will weaken her.", "Yes.", "Will it save her?", "It may give her a chance."])
 	assert(sequence.OPENING_ZOOM == Vector2(6.6, 6.6))
 	assert(sequence.BOSS_CAMERA_OFFSET == Vector2(10.0, 0.0))
 	assert(sequence.KING_EXIT_DURATION == 3.8)

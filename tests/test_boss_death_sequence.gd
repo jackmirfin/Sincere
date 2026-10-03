@@ -19,6 +19,9 @@ func test_boss_death_runs_slowmo_despawns_summons_then_opens_gate() -> void:
 	wizard.summoned_enemies = [goblin]
 	wizard.health = 10
 	wizard.take_damage(999)
+	assert(wizard.lab_notes_book != null)
+	assert(is_instance_valid(wizard.lab_notes_book))
+	assert(wizard.lab_notes_book.get_node("BookSprite").texture.resource_path == "res://assets/items/book.png")
 	assert(Engine.time_scale < 1.0)
 	assert(not is_instance_valid(goblin) or goblin.is_queued_for_deletion())
 	assert(wizard.summoned_enemies.is_empty())

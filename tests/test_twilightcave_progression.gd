@@ -18,6 +18,9 @@ class DummyEnemy extends Node2D:
 func _spawn_cave() -> Node2D:
 	var world: Node2D = CAVE_SCENE.instantiate() as Node2D
 	add_child(world)
+	# These are isolated progression checks; the dedicated opening test exercises
+	# the King cutscene, which would otherwise share the same roof elevator.
+	world.opening_sequence_running = true
 	return world
 
 func _wait_process_frames(count: int) -> void:
@@ -160,7 +163,7 @@ func test_endgate_ignores_enemies_outside_its_room() -> void:
 func test_roof_elevator_waits_for_lever3_and_parks_in_the_hatch() -> void:
 	var world: Node2D = _spawn_cave()
 	await get_tree().process_frame
-	var elevator: Elevator = world.get_node("elevator2") as Elevator
+	var elevator: Elevator = world.get_node("elevators/elevator2") as Elevator
 	var lever3: CaveLever = world.get_node("interactables/lever3") as CaveLever
 	var knight: PlayerController = world.get_node("knight") as PlayerController
 	var platform: TileMapLayer = elevator.get_node("elevatorplatform") as TileMapLayer
@@ -186,7 +189,7 @@ func test_roof_elevator_waits_for_lever3_and_parks_in_the_hatch() -> void:
 	var room_floor: float = 176.0
 	assert(absf(start_y - room_floor) < SETTLE_EPSILON, "the platform does not sit level with the room floor")
 	# Let the intro ride finish first, so only this elevator is carrying him.
-	var intro: Elevator = world.get_node("elevator") as Elevator
+	var intro: Elevator = world.get_node("elevators/elevator") as Elevator
 	assert(await _wait_until(func() -> bool: return not intro.is_active() and intro.rider == null), "the intro ride never finished")
 	knight.global_position = Vector2(elevator.global_position.x, start_y - KNIGHT_FEET_OFFSET)
 	await _wait_physics_frames(20)
@@ -237,7 +240,7 @@ func test_roof_elevator_waits_for_lever3_and_parks_in_the_hatch() -> void:
 func test_roof_elevator_stays_put_without_a_rider() -> void:
 	var world: Node2D = _spawn_cave()
 	await get_tree().process_frame
-	var elevator: Elevator = world.get_node("elevator2") as Elevator
+	var elevator: Elevator = world.get_node("elevators/elevator2") as Elevator
 	var knight: PlayerController = world.get_node("knight") as PlayerController
 	var start_y: float = elevator.global_position.y
 	# The knight is far away in the intro shaft, so flipping the lever on its own

@@ -26,12 +26,8 @@ const ROUTE: Array[NodePath] = [
 const BOSS_DIALOGUE: Array[Dictionary] = [
 	{"speaker": "KING", "text": "How fares she?"},
 	{"speaker": "WIZARD", "text": "Stable, for now. But the affliction resists us."},
-	{"speaker": "KING", "text": "You said the first course might be enough."},
-	{"speaker": "WIZARD", "text": "It was not."},
 	{"speaker": "KING", "text": "And now?"},
 	{"speaker": "WIZARD", "text": "We begin again. Stronger this time."},
-	{"speaker": "KING", "text": "It will weaken her."},
-	{"speaker": "WIZARD", "text": "It may give her a chance."},
 	{"speaker": "KING", "text": "...And the knight?"},
 	{"speaker": "WIZARD", "text": "He will not turn back."},
 	{"speaker": "KING", "text": "No. I do not suppose he will."},

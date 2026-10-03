@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://sts1oavdcash"]
 
-[ext_resource type="Texture2D" uid="uid://f7qluphek4d2" path="res://assets/characters/king/NoBkgColor/spr_King2Combo_strip_no_bkg.png" id="1_y26ih"]
-[ext_resource type="Texture2D" uid="uid://du5wxduxfm23" path="res://assets/characters/king/NoBkgColor/spr_KingDeath_strip_no_bkg.png" id="2_6iuwv"]
-[ext_resource type="Texture2D" uid="uid://cuslev61agak2" path="res://assets/characters/king/NoBkgColor/spr_KingGroundAttack_strip_no_bkg.png" id="3_6440l"]
-[ext_resource type="Texture2D" uid="uid://v2sq00c2iyld" path="res://assets/characters/king/NoEffects/spr_KingIdle_NoEffects.png" id="4_cojbw"]
-[ext_resource type="Texture2D" uid="uid://tp1ipuyexlgy" path="res://assets/characters/king/NoBkgColor/spr_KingTeleport_strip_no_bkg.png" id="5_7lhro"]
-[ext_resource type="Texture2D" uid="uid://dtqkmiapel6cx" path="res://assets/characters/king/NoBkgColor/spr_KingWalk_strip_no_bkg.png" id="6_7qhre"]
+[ext_resource type="Texture2D" uid="uid://f7qluphek4d2" path="res://assets/characters/boss_enemies/king/NoBkgColor/spr_King2Combo_strip_no_bkg.png" id="1_y26ih"]
+[ext_resource type="Texture2D" uid="uid://du5wxduxfm23" path="res://assets/characters/boss_enemies/king/NoBkgColor/spr_KingDeath_strip_no_bkg.png" id="2_6iuwv"]
+[ext_resource type="Texture2D" uid="uid://cuslev61agak2" path="res://assets/characters/boss_enemies/king/NoBkgColor/spr_KingGroundAttack_strip_no_bkg.png" id="3_6440l"]
+[ext_resource type="Texture2D" uid="uid://v2sq00c2iyld" path="res://assets/characters/boss_enemies/king/NoEffects/spr_KingIdle_NoEffects.png" id="4_cojbw"]
+[ext_resource type="Texture2D" uid="uid://tp1ipuyexlgy" path="res://assets/characters/boss_enemies/king/NoBkgColor/spr_KingTeleport_strip_no_bkg.png" id="5_7lhro"]
+[ext_resource type="Texture2D" uid="uid://dtqkmiapel6cx" path="res://assets/characters/boss_enemies/king/NoBkgColor/spr_KingWalk_strip_no_bkg.png" id="6_7qhre"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jlx0y"]
 atlas = ExtResource("1_y26ih")
@@ -1163,7 +1163,7 @@ animations = [{
 }],
 "loop": 0,
 "name": &"teleport",
-"speed": 10.0
+"speed": 20.0
 }, {
 "frames": [{
 "duration": 1.0,
@@ -1199,5 +1199,5 @@ animations = [{
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1212327084]
 sprite_frames = SubResource("SpriteFrames_xrivr")
-animation = &"comboattack"
+animation = &"teleport"
 autoplay = "idle"

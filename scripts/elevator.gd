@@ -16,6 +16,8 @@ const VACUUM_SOUND: AudioStream = preload("res://assets/sounds/vaccum.mp3")
 ## Park the platform at stop_global_y instead of rising forever.
 @export var stop_at_global_y: bool = false
 @export var stop_global_y: float = 0.0
+## Keep the last rider reference after stopping so a nearby lever can start another leg.
+@export var retain_rider_at_stop: bool = false
 
 var lever: CaveLever = null
 var platform: TileMapLayer = null
@@ -24,6 +26,8 @@ var activated: bool = false
 var pending_activation: bool = false
 var cables: Array[AnimatedSprite2D] = []
 var audio: AudioStreamPlayer = null
+var pulley_fade_tween: Tween = null
+var startup_audio_delay_pending: bool = false
 
 func _ready() -> void:
 	collision_layer = 0
@@ -73,9 +77,20 @@ func _update_pulley_sound() -> void:
 	if riding:
 		_start_pulley_sound()
 		if not audio.playing:
-			audio.play()
+			if auto_start:
+				if not startup_audio_delay_pending:
+					startup_audio_delay_pending = true
+					_startup_audio_after_delay()
+			else:
+				audio.play()
 	elif audio.playing:
 		audio.stop()
+
+func _startup_audio_after_delay() -> void:
+	await get_tree().create_timer(1.0).timeout
+	startup_audio_delay_pending = false
+	if audio != null and activated and rider != null and is_instance_valid(rider) and not audio.playing:
+		audio.play()
 
 func _on_rider_entered(body: Node2D) -> void:
 	var entered: PlayerController = body as PlayerController
@@ -140,11 +155,37 @@ func _set_cables_active(active: bool) -> void:
 		if is_instance_valid(cable):
 			cable.play(&"active" if active else &"idle")
 
+func fade_out_pulley_sound(duration: float) -> void:
+	if audio == null or not audio.playing:
+		return
+	if is_instance_valid(pulley_fade_tween) and pulley_fade_tween.is_running():
+		pulley_fade_tween.kill()
+	pulley_fade_tween = create_tween()
+	pulley_fade_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pulley_fade_tween.tween_property(audio, "volume_db", -60.0, maxf(0.01, duration))
+	pulley_fade_tween.tween_callback(audio.stop)
+
 func _start_pulley_sound() -> void:
 	if audio == null:
 		return
+	if is_instance_valid(pulley_fade_tween) and pulley_fade_tween.is_running():
+		pulley_fade_tween.kill()
+	pulley_fade_tween = null
 	audio.pitch_scale = pulley_pitch_scale
 	audio.volume_db = pulley_volume_db
+
+## Drives the pulley and cable visuals for scripted rides without registering a
+## gameplay rider or activating the elevator's lever-controlled movement.
+func set_cinematic_motion(active: bool) -> void:
+	if active:
+		_set_cables_active(true)
+		_start_pulley_sound()
+		if audio != null and not audio.playing:
+			audio.play()
+	else:
+		_set_cables_active(false)
+		if not activated and audio != null and audio.playing:
+			audio.stop()
 
 func is_active() -> bool:
 	return activated
@@ -155,7 +196,8 @@ func _finish_ride() -> void:
 	auto_start = false
 	_set_cables_active(false)
 	var leaving: PlayerController = rider
-	rider = null
+	if not retain_rider_at_stop:
+		rider = null
 	if leaving != null and is_instance_valid(leaving):
 		leaving.set_elevator_riding(false)
 	_update_pulley_sound()

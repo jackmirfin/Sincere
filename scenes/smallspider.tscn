@@ -1,0 +1,218 @@
+[gd_scene format=3 uid="uid://82g8rctjgfml"]
+
+[ext_resource type="Texture2D" uid="uid://c0rx07twsqfq2" path="res://assets/characters/enemies/spiders/smallspider.png" id="1_1yffp"]
+[ext_resource type="Script" uid="uid://w8qqgdhvxwa6" path="res://scripts/small_spider_enemy.gd" id="2_spider_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j2wbv"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 75, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5a88r"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 75, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qwius"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(84, 50, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bsdrn"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(84, 75, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rfflv"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 50, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5hdhi"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(28, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_70fyw"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rf8eb"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sib83"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sckud"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mewoh"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(84, 100, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ikl20"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 0, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0qr8d"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(28, 0, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dc134"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 0, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ooye5"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(84, 0, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q3aly"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 25, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_267o3"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(28, 25, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pq31f"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(56, 25, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j6bv0"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(84, 25, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xi57u"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(0, 50, 28, 25)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0tdfe"]
+atlas = ExtResource("1_1yffp")
+region = Rect2(28, 50, 28, 25)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j2wbv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5a88r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qwius")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bsdrn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rfflv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5hdhi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_70fyw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rf8eb")
+}],
+"loop": 0,
+"name": &"attack",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sib83")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sckud")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mewoh")
+}],
+"loop": 0,
+"name": &"death",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ikl20")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0qr8d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dc134")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ooye5")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q3aly")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_267o3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pq31f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j6bv0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xi57u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0tdfe")
+}],
+"loop": 1,
+"name": &"move",
+"speed": 8.0
+}]
+
+[sub_resource type="RectangleShape2D" id="SpiderBodyShape"]
+size = Vector2(20, 12)
+
+[sub_resource type="CircleShape2D" id="SpiderHurtShape"]
+radius = 14.0
+
+[sub_resource type="RectangleShape2D" id="SpiderWeaponShape"]
+size = Vector2(11, 17)
+
+[node name="smallspider" type="CharacterBody2D" unique_id=681191437 groups=["enemy"]]
+collision_layer = 8
+script = ExtResource("2_spider_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2015946612]
+position = Vector2(0, -12)
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"attack"
+autoplay = "idle"
+frame = 7
+frame_progress = 1.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1076605201]
+position = Vector2(0, -6)
+shape = SubResource("SpiderBodyShape")
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1209067035]
+position = Vector2(0, -12)
+collision_layer = 8
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1090306827]
+shape = SubResource("SpiderHurtShape")
+
+[node name="WeaponHitbox" type="Area2D" parent="." unique_id=2043935790 groups=["enemy_weapon_hitbox"]]
+position = Vector2(-14, -11)
+collision_layer = 16
+collision_mask = 2
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WeaponHitbox" unique_id=1308964028]
+position = Vector2(21, 1)
+shape = SubResource("SpiderWeaponShape")
+disabled = true

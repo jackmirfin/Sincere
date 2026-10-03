@@ -58,3 +58,9 @@ func _on_animation_finished() -> void:
 	flipped_state = true
 	play(&"flipped")
 	flipped.emit()
+
+func reset_to_unflipped() -> void:
+	flipping = false
+	flipped_state = false
+	can_interact = true
+	play(&"unflipped")

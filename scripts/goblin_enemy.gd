@@ -45,19 +45,22 @@ var jump_cooldown_time: float = 0.0
 var dead: bool = false
 var player: CharacterBody2D
 var hurt_audio: AudioStreamPlayer2D
+var attack_woosh_audio: AudioStreamPlayer2D
 var hit_effect_index: int = 0
 var struck_attack_ids: Dictionary = {}
 var attack_id: int = 0
 var attack_impact_reached: bool = false
 const MELEE_IMPACT_FRAME: int = 6
+const ATTACK_WOOSH_PITCH: float = 1.15
 const BOMB_RELEASE_FRAME: int = 6
 
 func _ready() -> void:
 	hurt_audio = AudioStreamPlayer2D.new()
 	hurt_audio.stream = ENEMY_HURT_SOUND
 	hurt_audio.volume_db = 4.0
-	hurt_audio.pitch_scale = 1.15
+	hurt_audio.pitch_scale = 1.17
 	add_child(hurt_audio)
+	attack_woosh_audio = EnemyAttackAudio.create_player(self, ATTACK_WOOSH_PITCH)
 	add_to_group("enemy")
 	health = max_health
 	floor_snap_length = 4.0
@@ -182,6 +185,7 @@ func _change_state(next_state: EnemyState) -> void:
 			attack_counter += 1
 			_set_animation(current_attack, true)
 		EnemyState.ATTACK_ACTIVE:
+			attack_woosh_audio.play()
 			_set_animation(current_attack)
 		EnemyState.BOMB_RETREAT:
 			_set_animation(&"run")

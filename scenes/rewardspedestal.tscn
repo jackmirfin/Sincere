@@ -1,0 +1,136 @@
+[gd_scene format=3 uid="uid://bicoju6lkunou"]
+
+[ext_resource type="Script" path="res://scripts/reward_pedestal.gd" id="21_script"]
+[ext_resource type="Texture2D" uid="uid://dna8v6bkf7clm" path="res://assets/tilemaps/rewardpedestal/itemrewards.png" id="1_ym8u1"]
+[ext_resource type="Texture2D" uid="uid://bny4olo41ebut" path="res://assets/tilemaps/rewardpedestal/left1.png" id="2_eajf4"]
+[ext_resource type="Texture2D" uid="uid://cgysafl44vdob" path="res://assets/tilemaps/rewardpedestal/left2.png" id="3_lt2p8"]
+[ext_resource type="Texture2D" uid="uid://kbq88k7pmfub" path="res://assets/tilemaps/rewardpedestal/left3.png" id="4_skdic"]
+[ext_resource type="Texture2D" uid="uid://bdw3imy4mle6y" path="res://assets/tilemaps/rewardpedestal/left4.png" id="5_ckod6"]
+[ext_resource type="Texture2D" uid="uid://djkmxsnfvj1ot" path="res://assets/tilemaps/rewardpedestal/left5.png" id="6_ln0q5"]
+[ext_resource type="Texture2D" uid="uid://bi0fj4mucjkwd" path="res://assets/tilemaps/rewardpedestal/left6.png" id="7_qf30e"]
+[ext_resource type="Texture2D" uid="uid://fd0ui8diohog" path="res://assets/tilemaps/rewardpedestal/left7.png" id="8_usqjy"]
+[ext_resource type="Texture2D" uid="uid://fcbufq5q4m1x" path="res://assets/tilemaps/rewardpedestal/middle1.png" id="9_6m8x6"]
+[ext_resource type="Texture2D" uid="uid://butsoo708wmke" path="res://assets/tilemaps/rewardpedestal/middle2.png" id="10_0rycn"]
+[ext_resource type="Texture2D" uid="uid://c4xsadui0h4qw" path="res://assets/tilemaps/rewardpedestal/middle3.png" id="11_3lckp"]
+[ext_resource type="Texture2D" uid="uid://dffp5ix5f54h" path="res://assets/tilemaps/rewardpedestal/middle4.png" id="12_bq25u"]
+[ext_resource type="Texture2D" uid="uid://ds0r0jc3s8xpb" path="res://assets/tilemaps/rewardpedestal/middle6.png" id="13_gegnf"]
+[ext_resource type="Texture2D" uid="uid://gahjt3iu8xsn" path="res://assets/tilemaps/rewardpedestal/right1.png" id="14_usqjy"]
+[ext_resource type="Texture2D" uid="uid://dbw1eg0lr0w1g" path="res://assets/tilemaps/rewardpedestal/right2.png" id="15_6m8x6"]
+[ext_resource type="Texture2D" uid="uid://bbnnodkq34g71" path="res://assets/tilemaps/rewardpedestal/right3.png" id="16_0rycn"]
+[ext_resource type="Texture2D" uid="uid://7fgq46f7mu5n" path="res://assets/tilemaps/rewardpedestal/right4.png" id="17_3lckp"]
+[ext_resource type="Texture2D" uid="uid://c416obkvtomxd" path="res://assets/tilemaps/rewardpedestal/right5.png" id="18_bq25u"]
+[ext_resource type="Texture2D" uid="uid://dyo2p15k0e3a5" path="res://assets/tilemaps/rewardpedestal/right6.png" id="19_gegnf"]
+[ext_resource type="Texture2D" uid="uid://c6drlq3cwedip" path="res://assets/tilemaps/rewardpedestal/right7.png" id="20_13tof"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ym8u1")
+}],
+"loop": 1,
+"name": &"active",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_eajf4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_lt2p8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_skdic")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_ckod6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_ln0q5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_qf30e")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_usqjy")
+}],
+"loop": 0,
+"name": &"left",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_6m8x6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_0rycn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_3lckp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_bq25u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_gegnf")
+}],
+"loop": 0,
+"name": &"middle",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("14_usqjy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_6m8x6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_0rycn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_3lckp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_bq25u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_gegnf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_13tof")
+}],
+"loop": 0,
+"name": &"right",
+"speed": 6.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xrivr"]
+radius = 25.0
+
+[node name="rewardspedestal" type="AnimatedSprite2D" unique_id=465799179]
+script = ExtResource("21_script")
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"active"
+autoplay = "active"
+
+[node name="reward1" type="Area2D" parent="." unique_id=1664579347]
+position = Vector2(-58, 4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="reward1" unique_id=1907513723]
+position = Vector2(0, 13)
+shape = SubResource("CircleShape2D_xrivr")
+
+[node name="reward2" type="Area2D" parent="." unique_id=648712787]
+position = Vector2(0, 3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="reward2" unique_id=1222057096]
+position = Vector2(0, 14)
+shape = SubResource("CircleShape2D_xrivr")
+
+[node name="reward3" type="Area2D" parent="." unique_id=17412436]
+position = Vector2(59, 3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="reward3" unique_id=1492767327]
+position = Vector2(-1, 15)
+shape = SubResource("CircleShape2D_xrivr")

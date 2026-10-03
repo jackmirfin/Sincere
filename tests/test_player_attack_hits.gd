@@ -100,7 +100,7 @@ func test_parry_stuns_enemy_and_shows_indicator() -> void:
 	await get_tree().process_frame
 
 
-func test_player_damage_triggers_slight_slowmo() -> void:
+func test_player_damage_has_no_hit_invulnerability_and_strong_feedback() -> void:
 	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
 	player.auto_start = false
 	add_child(player)
@@ -109,8 +109,12 @@ func test_player_damage_triggers_slight_slowmo() -> void:
 	var initial_health: int = player.health
 	player.receive_hit(false)
 	assert(player.health == initial_health - 1)
+	assert(is_zero_approx(player.invulnerable_time), "Taking damage should not grant follow-up hit immunity")
 	assert(player.hit_slowdown_active)
 	assert(is_equal_approx(Engine.time_scale, PlayerController.HIT_SLOWMO_SCALE))
+	assert(player.animated_sprite.modulate == PlayerController.HIT_FLASH_COLOR, "Player should flash visibly on hit")
+	player.receive_hit(false)
+	assert(player.health == initial_health - 2, "A second hit should damage the player immediately")
 	Engine.time_scale = 1.0
 	player.hit_slowdown_active = false
 	player.queue_free()

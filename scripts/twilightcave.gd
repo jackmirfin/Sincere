@@ -1,6 +1,9 @@
 extends Node2D
 class_name TwilightCave
 
+signal opening_camera_returned_to_player
+
+
 ## The opening ride starts below the level art, so the camera has to follow the
 ## knight down the shaft; 800 keeps the whole ride in view while the level art
 ## still covers everything the camera can reach.
@@ -17,7 +20,15 @@ const CABLE_ANCHOR_Y: float = 528.0
 const ROOF_ELEVATOR_STOP_Y: float = -160.0
 const COIN_MAGNET_RADIUS: float = 88.0
 const KING_SCENE: PackedScene = preload("res://scenes/king.tscn")
-const TWILIGHT_MUSIC: AudioStream = preload("res://assets/sounds/twilight.mp3")
+const KING_ROOT_ABOVE_PLATFORM: float = 12.0
+const CUTSCENE_DASH_DURATION: float = 0.92
+const CUTSCENE_STOP_DURATION: float = 0.3
+const KING_TELEPORT_REVEAL_LEAD: float = 0.2
+const KING_EXIT_DURATION: float = 3.8
+const KING_BOARD_DURATION: float = 0.92
+const PULLEY_FADE_OUT_DURATION: float = 1.5
+const TWILIGHT_MUSIC_A: AudioStream = preload("res://assets/sounds/twilighta.mp3")
+const TWILIGHT_MUSIC_B: AudioStream = preload("res://assets/sounds/twilightb.mp3")
 ## The room the end gate seals off. It stays shut while any living enemy is in it.
 const ENDGATE_ROOM: Rect2 = Rect2(64.0, 16.0, 1072.0, 160.0)
 ## Teleporter receivers are named after the teleporter that owns them.
@@ -36,7 +47,11 @@ const PROGRESSION_INTERVAL: float = 0.15
 
 var evaluation_time: float = 0.0
 var background_music: AudioStreamPlayer = null
+var twilight_a_music: AudioStreamPlayer = null
+var twilight_music_started: bool = false
+var twilight_a_started: bool = false
 var opening_sequence_running: bool = false
+var king_teleport_animation_finished: bool = false
 
 func _enter_tree() -> void:
 	var pause_menu: PauseMenu = get_node_or_null("PauseLayer/PauseMenu") as PauseMenu
@@ -126,50 +141,197 @@ func _own_receiver(teleporter: Teleporter) -> Node2D:
 func _setup_background_music() -> void:
 	background_music = AudioStreamPlayer.new()
 	background_music.name = "BackgroundMusic"
-	background_music.stream = TWILIGHT_MUSIC
-	background_music.pitch_scale = 0.82
+	background_music.stream = TWILIGHT_MUSIC_B
+	background_music.pitch_scale = 0.86
 	background_music.volume_db = -6.0
+	background_music.finished.connect(_on_background_music_finished)
 	add_child(background_music)
+
+	twilight_a_music = AudioStreamPlayer.new()
+	twilight_a_music.name = "TwilightAMusic"
+	twilight_a_music.stream = TWILIGHT_MUSIC_A
+	twilight_a_music.pitch_scale = 0.86
+	twilight_a_music.volume_db = -9.0
+	twilight_a_music.finished.connect(_on_twilight_a_music_finished)
+	add_child(twilight_a_music)
 
 func play_opening_sequence() -> void:
 	if opening_sequence_running:
 		return
 	opening_sequence_running = true
 	var player: PlayerController = get_node_or_null("knight") as PlayerController
-	var camera: Camera2D = player.get_node_or_null("Camera2D") as Camera2D if player != null else null
-	if player == null or camera == null:
+	var player_camera: Camera2D = player.get_node_or_null("Camera2D") as Camera2D if player != null else null
+	if player == null or player_camera == null:
 		opening_sequence_running = false
 		return
 	background_music.stop()
 	var intro_elevator: Elevator = get_node("elevators/elevator") as Elevator
 	while is_instance_valid(player) and intro_elevator.global_position.y > ELEVATOR_STOP_Y:
 		await get_tree().process_frame
+	if not is_instance_valid(player):
+		opening_sequence_running = false
+		return
+
+	player.set_teleport_locked(true)
+	var cinematic_camera: Camera2D = Camera2D.new()
+	cinematic_camera.name = "TwilightOpeningCamera"
+	cinematic_camera.position_smoothing_enabled = false
+	cinematic_camera.process_callback = Camera2D.CAMERA2D_PROCESS_PHYSICS
+	cinematic_camera.limit_enabled = true
+	cinematic_camera.limit_left = player_camera.limit_left
+	cinematic_camera.limit_right = player_camera.limit_right
+	cinematic_camera.zoom = player_camera.zoom
+	add_child(cinematic_camera)
+	cinematic_camera.global_position = player.global_position + player_camera.position
+	cinematic_camera.make_current()
+
 	var roof: Elevator = roof_elevator
 	var king: CharacterBody2D = KING_SCENE.instantiate() as CharacterBody2D
+	var start_y: float = roof.global_position.y if roof != null else 0.0
+	var start_monitoring: bool = roof.monitoring if roof != null else false
 	if roof != null and king != null:
-		add_child(king)
-		king.global_position = roof.global_position + Vector2(0.0, -30.0)
-		var start_y: float = roof.global_position.y
-		var start_camera: Vector2 = camera.global_position
-		var focus: Vector2 = roof.global_position + Vector2(0.0, -24.0)
-		var camera_tween: Tween = create_tween()
-		camera_tween.tween_property(camera, "global_position", focus, 0.8)
-		await camera_tween.finished
+		var gate_targets: Array[CaveGate] = [gate1, gate2, gate3]
+		var king_sprite: AnimatedSprite2D = null
+		for gate: CaveGate in gate_targets:
+			if gate == null:
+				continue
+			if gate == gate3:
+				var final_gate_pan: Tween = _create_cutscene_camera_pan(cinematic_camera, gate.global_position, CUTSCENE_DASH_DURATION)
+				await final_gate_pan.finished
+				king_sprite = _prepare_king_for_teleport(king, roof)
+			else:
+				await _pan_cutscene_camera(cinematic_camera, gate.global_position, CUTSCENE_DASH_DURATION)
+			await get_tree().create_timer(CUTSCENE_STOP_DURATION).timeout
+
+		if king_sprite == null:
+			king_sprite = _prepare_king_for_teleport(king, roof)
+		var lever_focus: Vector2 = lever3.global_position if lever3 != null else king.global_position
+		var lever_pan_duration: float = _cutscene_camera_pan_duration(cinematic_camera, lever_focus, CUTSCENE_DASH_DURATION)
+		var camera_reveal_time: float = _camera_pan_time_to_reveal_position(cinematic_camera, cinematic_camera.global_position, lever_focus, king.global_position, lever_pan_duration)
+		var teleport_start_delay: float = clampf(camera_reveal_time - KING_TELEPORT_REVEAL_LEAD, 0.0, maxf(0.0, lever_pan_duration - 0.1))
+		var lever_pan: Tween = _create_cutscene_camera_pan(cinematic_camera, lever_focus, CUTSCENE_DASH_DURATION)
+		king_teleport_animation_finished = false
+		king_sprite.animation_finished.connect(_on_king_teleport_animation_finished)
+		await get_tree().create_timer(teleport_start_delay).timeout
+		king_sprite.play(&"teleport")
+		await lever_pan.finished
+		if not king_teleport_animation_finished:
+			await king_sprite.animation_finished
+		king_sprite.animation_finished.disconnect(_on_king_teleport_animation_finished)
+		king_sprite.play(&"idle")
+		await get_tree().create_timer(CUTSCENE_STOP_DURATION).timeout
+		king_sprite.play(&"walk")
+		var boarding: Tween = create_tween()
+		boarding.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		boarding.tween_property(king, "global_position:x", roof.global_position.x, KING_BOARD_DURATION)
+		await boarding.finished
+		king_sprite.play(&"idle")
+		await get_tree().create_timer(CUTSCENE_STOP_DURATION).timeout
+		if lever3 != null and not lever3.flipped_state:
+			lever3.flip()
+			while not lever3.flipped_state:
+				await get_tree().process_frame
+
+		# The elevator only departs after the lever's full flip animation.
+		roof.monitoring = false
+		roof.set_cinematic_motion(true)
 		var departure: Tween = create_tween().set_parallel(true)
-		departure.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-		departure.tween_property(roof, "global_position:y", ROOF_ELEVATOR_STOP_Y, 3.0)
-		departure.tween_property(king, "global_position:y", ROOF_ELEVATOR_STOP_Y - 30.0, 3.0)
-		var leave_camera: Tween = create_tween()
-		leave_camera.tween_property(camera, "global_position:y", ROOF_ELEVATOR_STOP_Y - 10.0, 3.0)
+		departure.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		departure.tween_property(roof, "global_position:y", ROOF_ELEVATOR_STOP_Y, KING_EXIT_DURATION)
+		departure.tween_property(king, "global_position:y", ROOF_ELEVATOR_STOP_Y - KING_ROOT_ABOVE_PLATFORM, KING_EXIT_DURATION)
 		await departure.finished
+		while is_instance_valid(king) and not _king_is_offscreen_above(king, cinematic_camera):
+			await get_tree().process_frame
 		king.queue_free()
+
+	var return_position: Vector2 = player.global_position + player_camera.position
+	if roof != null:
+		roof.fade_out_pulley_sound(PULLEY_FADE_OUT_DURATION)
+	await _pan_cutscene_camera(cinematic_camera, return_position, CUTSCENE_DASH_DURATION)
+	# Do not park/reset the cinematic lift while the camera is still showing it.
+	opening_camera_returned_to_player.emit()
+	if roof != null:
+		roof.set_cinematic_motion(false)
 		roof.global_position.y = start_y
+		roof.activated = false
+		roof.pending_activation = false
+		roof.auto_start = false
 		roof._update_cables()
-		camera.global_position = start_camera
+		roof.monitoring = start_monitoring
+	if lever3 != null:
+		lever3.reset_to_unflipped()
+
+	cinematic_camera.queue_free()
+	player_camera.make_current()
+	player.set_teleport_locked(false)
 	var pause_played: bool = player.play_menu_animation(&"pause", Callable(self, "_start_intro_resume"))
 	if not pause_played:
 		_start_intro_resume()
 	opening_sequence_running = false
+
+func _prepare_king_for_teleport(king: CharacterBody2D, roof: Elevator) -> AnimatedSprite2D:
+	add_child(king)
+	var light_parallax: Parallax2D = get_node_or_null("LightParallax") as Parallax2D
+	if light_parallax != null:
+		move_child(king, light_parallax.get_index())
+	var king_sprite: AnimatedSprite2D = king.get_node("AnimatedSprite2D") as AnimatedSprite2D
+	# Start just off the platform; the King walks left onto it instead of appearing already aboard.
+	king.global_position = roof.global_position + Vector2(90.0, -KING_ROOT_ABOVE_PLATFORM)
+	king_sprite.flip_h = true
+	king_sprite.play(&"idle")
+	return king_sprite
+
+func _cutscene_camera_pan_duration(camera: Camera2D, target: Vector2, minimum_duration: float) -> float:
+	var travel_time: float = maxf(minimum_duration, camera.global_position.distance_to(target) / 1100.0)
+	return minf(travel_time, 1.65)
+
+func _on_king_teleport_animation_finished() -> void:
+	king_teleport_animation_finished = true
+
+func _cutscene_viewport_size(camera: Camera2D) -> Vector2:
+	var viewport_size: Vector2 = camera.get_viewport().get_visible_rect().size
+	if viewport_size.x < 320.0 or viewport_size.y < 180.0:
+		var configured_width: float = float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152))
+		var configured_height: float = float(ProjectSettings.get_setting("display/window/size/viewport_height", 648))
+		viewport_size = Vector2(configured_width, configured_height)
+	return viewport_size
+
+func _camera_pan_time_to_reveal_position(camera: Camera2D, start: Vector2, target: Vector2, point: Vector2, duration: float) -> float:
+	var viewport_size: Vector2 = _cutscene_viewport_size(camera)
+	var half_view_size: Vector2 = viewport_size / (camera.zoom * 2.0)
+	var x_reveal_center: float = point.x + half_view_size.x if start.x > point.x else point.x - half_view_size.x
+	var y_reveal_center: float = point.y + half_view_size.y if start.y > point.y else point.y - half_view_size.y
+	var x_time: float = _camera_pan_time_for_axis(start.x, target.x, x_reveal_center, duration)
+	var y_time: float = _camera_pan_time_for_axis(start.y, target.y, y_reveal_center, duration)
+	return maxf(x_time, y_time)
+
+func _camera_pan_time_for_axis(start: float, target: float, reveal_center: float, duration: float) -> float:
+	var travel: float = target - start
+	if is_zero_approx(travel):
+		return 0.0
+	var progress: float = clampf((reveal_center - start) / travel, 0.0, 1.0)
+	return duration * acos(1.0 - 2.0 * progress) / PI
+
+func _pan_cutscene_camera(camera: Camera2D, target: Vector2, minimum_duration: float) -> void:
+	var pan: Tween = _create_cutscene_camera_pan(camera, target, minimum_duration)
+	await pan.finished
+
+func _create_cutscene_camera_pan(camera: Camera2D, target: Vector2, minimum_duration: float) -> Tween:
+	var travel_time: float = _cutscene_camera_pan_duration(camera, target, minimum_duration)
+	var pan: Tween = create_tween()
+	pan.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pan.tween_property(camera, "global_position", target, travel_time)
+	return pan
+
+func _king_is_offscreen_above(king: CharacterBody2D, camera: Camera2D) -> bool:
+	var king_sprite: AnimatedSprite2D = king.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if king_sprite == null or king_sprite.sprite_frames == null:
+		return king.global_position.y < camera.get_screen_center_position().y
+	var frame_texture: Texture2D = king_sprite.sprite_frames.get_frame_texture(king_sprite.animation, king_sprite.frame)
+	var king_bottom: float = king.global_position.y + frame_texture.get_height() * 0.5
+	var viewport_height: float = get_viewport().get_visible_rect().size.y
+	var view_top: float = camera.get_screen_center_position().y - viewport_height / (2.0 * camera.zoom.y)
+	return king_bottom < view_top
 
 func _start_intro_resume() -> void:
 	var player: PlayerController = get_node_or_null("knight") as PlayerController
@@ -180,8 +342,25 @@ func _start_intro_resume() -> void:
 		_start_twilight_music()
 
 func _start_twilight_music() -> void:
-	if background_music != null and not background_music.playing:
-		background_music.play()
+	if background_music == null or background_music.playing:
+		return
+	if not twilight_music_started:
+		background_music.stream = TWILIGHT_MUSIC_B
+		twilight_music_started = true
+	background_music.play()
+
+func _on_background_music_finished() -> void:
+	if background_music == null or not twilight_music_started:
+		return
+	if not twilight_a_started and twilight_a_music != null:
+		twilight_a_started = true
+		twilight_a_music.play()
+	background_music.play()
+
+func _on_twilight_a_music_finished() -> void:
+	if twilight_a_music == null or not twilight_a_started:
+		return
+	twilight_a_music.play()
 
 func _configure_intro_elevator() -> void:
 	var elevator: Elevator = get_node_or_null("elevators/elevator") as Elevator
