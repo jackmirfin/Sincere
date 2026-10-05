@@ -17,6 +17,8 @@
 [ext_resource type="PackedScene" uid="uid://do2cfn5as8s5s" path="res://scenes/chargingsocket.tscn" id="15_qufpx"]
 [ext_resource type="PackedScene" uid="uid://batbhuwlre4a4" path="res://scenes/control.tscn" id="16_pause_menu"]
 
+[ext_resource type="PackedScene" path="res://scenes/scene_lighting_rig.tscn" id="100_lighting_rig"]
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3o544"]
 texture = ExtResource("2_wa0sa")
 0:0/0 = 0
@@ -8759,3 +8761,5 @@ position = Vector2(841, 129)
 layer = 100
 
 [node name="PauseMenu" parent="PauseLayer" instance=ExtResource("16_pause_menu")]
+
+[node name="SceneLightingRig" parent="." instance=ExtResource("100_lighting_rig")]

@@ -205,7 +205,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	HitEffect.spawn_hit(get_parent(), global_position, attacker_position, hit_effect_index)
 	hit_effect_index = posmod(hit_effect_index + 1, 3)
 	if attacker != null:
-		take_damage(damage, attack_level, direction)
+		HitEffect.apply_attack_damage(self, attacker, [damage, attack_level, direction])
 		if attacker.has_method("apply_hitstop"):
 			attacker.apply_hitstop(hit_stop_duration)
 
@@ -247,7 +247,7 @@ func _clear_hit_flash() -> void:
 
 func _spawn_attack_indicator() -> void:
 	var indicator: AnimatedSprite2D = ATTACK_INDICATOR_SCENE.instantiate() as AnimatedSprite2D
-	indicator.position = Vector2(0, -48)
+	indicator.position = Vector2(0, -42)
 	indicator.speed_scale = 2.4
 	add_child(indicator)
 

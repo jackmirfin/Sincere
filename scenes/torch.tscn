@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://3l5j80pgngtx"]
+
+[ext_resource type="Texture2D" uid="uid://655njoug3o1v" path="res://assets/tilemaps/GandalfHardcore FREE Platformer Assets/Torch.png" id="1_d4v33"]
+[ext_resource type="GradientTexture2D" uid="uid://blit6vawywo03" path="res://resources/player_light.tres" id="2_warm_light"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_my26j"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(0, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o2tjn"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r3k50"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(64, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ndh0a"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(96, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ktql7"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(128, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gybtl"]
+atlas = ExtResource("1_d4v33")
+region = Rect2(160, 64, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xrivr"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_my26j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o2tjn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r3k50")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ndh0a")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ktql7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gybtl")
+}],
+"loop": 1,
+"name": &"torch",
+"speed": 8.0
+}]
+
+[node name="torch" type="Node2D" unique_id=2025449654]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1145150008]
+sprite_frames = SubResource("SpriteFrames_xrivr")
+animation = &"torch"
+autoplay = "torch"
+frame_progress = 0.17588468
+
+[node name="WarmGlow" type="PointLight2D" parent="."]
+position = Vector2(0, -5)
+color = Color(1, 0.64, 0.32, 1)
+energy = 1.05
+texture = ExtResource("2_warm_light")
+texture_scale = 0.55

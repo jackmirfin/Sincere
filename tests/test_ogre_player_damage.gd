@@ -35,7 +35,7 @@ func _assert_attack_hits_from_side(facing_direction: int) -> void:
 	world.queue_free()
 	await get_tree().process_frame
 
-func test_all_five_ogre_strikes_hit_a_player_who_does_not_evade() -> void:
+func test_three_ogre_strikes_hit_a_player_who_does_not_evade() -> void:
 	var world: Node2D = Node2D.new()
 	add_child(world)
 	var floor: StaticBody2D = StaticBody2D.new()
@@ -63,23 +63,13 @@ func test_all_five_ogre_strikes_hit_a_player_who_does_not_evade() -> void:
 		if strike_index > 0:
 			ogre._set_weapon_active(false)
 			await get_tree().physics_frame
-		if strike_index == 3:
-			ogre.animated_sprite.frame = OgreEnemy.ATTACK_HIT_FRAMES[strike_index]
-			for _collision_frame: int in range(3):
-				await get_tree().physics_frame
-			assert(player.health == starting_health - 3,
-				"Ogre's turned-away hitbox damaged the player on its old side")
-			player.position = Vector2(-60.0, 0.0)
-			for _collision_frame: int in range(3):
-				await get_tree().physics_frame
-		else:
-			ogre.animated_sprite.frame = OgreEnemy.ATTACK_HIT_FRAMES[strike_index]
-			for _collision_frame: int in range(3):
-				await get_tree().physics_frame
+		ogre.animated_sprite.frame = OgreEnemy.ATTACK_HIT_FRAMES[strike_index]
+		for _collision_frame: int in range(3):
+			await get_tree().physics_frame
 		assert(player.health == starting_health - strike_index - 1,
 			"Ogre strike %d missed the player in its facing direction; health=%d" % [strike_index + 1, player.health])
-		assert(signi(int(signf(ogre.weapon_hitbox.position.x))) == (1 if strike_index < 3 else -1),
-			"Ogre strike %d hitbox did not match its visible facing" % (strike_index + 1))
+		assert(signi(int(signf(ogre.weapon_hitbox.position.x))) == 1,
+			"Ogre hitbox did not match its facing during the first three strikes")
 	Engine.time_scale = 1.0
 	player.hit_slowdown_active = false
 	var feedback_timer: SceneTreeTimer = get_tree().create_timer(PlayerController.HIT_SLOWMO_DURATION + 0.05, true, false, true)

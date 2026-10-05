@@ -8,6 +8,7 @@ class_name TreasureChest
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 var opened: bool = false
+var coin_spawn_batch_size: int = 0
 
 func _ready() -> void:
 	collision_layer = 8
@@ -46,8 +47,12 @@ func get_drop_profile() -> Dictionary:
 		"max_coins": int(coin_count_max * coin_amount_multiplier / 2.0),
 		"min_types": 2,
 		"max_types": 5,
-		"value_multiplier": 1.0
+		"value_multiplier": 1.0,
+		"spawn_per_frame": coin_spawn_batch_size
 	}
+
+func set_coin_spawn_batch_size(batch_size: int) -> void:
+	coin_spawn_batch_size = maxi(0, batch_size)
 
 
 func _drop_coins() -> void:

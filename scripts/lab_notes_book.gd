@@ -55,6 +55,7 @@ func _open_notes() -> void:
 	reading = true
 	prompt.hide()
 	player.set_teleport_locked(true)
+	player.finish_cinematic_animation()
 	player_camera = player.get_node_or_null("Camera2D") as Camera2D
 	if player_camera != null:
 		original_zoom = player_camera.zoom
@@ -63,8 +64,6 @@ func _open_notes() -> void:
 		zoom_tween.tween_property(player_camera, "zoom", READ_ZOOM, 0.3)
 	document_stage = 0
 	dialogue_ui.show_document_title(NOTES_TITLE)
-	if player.animated_sprite.sprite_frames.has_animation(&"shrug"):
-		player.animated_sprite.play(&"shrug")
 
 func _advance_notes() -> void:
 	if not reading:
@@ -87,8 +86,20 @@ func _close_notes() -> void:
 		var zoom_tween: Tween = create_tween()
 		zoom_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		zoom_tween.tween_property(player_camera, "zoom", original_zoom, 0.3)
-	if is_instance_valid(player):
-		player.set_teleport_locked(false)
-		player.animated_sprite.play(&"idle")
+	var reading_player: PlayerController = player
+	if is_instance_valid(reading_player):
+		if reading_player.animated_sprite.sprite_frames.has_animation(&"shrug"):
+			var reaction_callback: Callable = _on_reading_reaction_finished.bind(reading_player)
+			reading_player.animated_sprite.animation_finished.connect(reaction_callback, CONNECT_ONE_SHOT)
+			reading_player.play_cinematic_animation(&"shrug")
+		else:
+			reading_player.finish_cinematic_animation()
+			reading_player.set_teleport_locked(false)
 	player = null
 	prompt.hide()
+
+func _on_reading_reaction_finished(reading_player: PlayerController) -> void:
+	if not is_instance_valid(reading_player):
+		return
+	reading_player.finish_cinematic_animation()
+	reading_player.set_teleport_locked(false)

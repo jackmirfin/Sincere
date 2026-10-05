@@ -8,7 +8,7 @@ const ENEMY_HURT_SOUND: AudioStream = preload("res://assets/sounds/enemyhurt.mp3
 const ATTACK_SOUND: AudioStream = preload("res://assets/sounds/bang.mp3")
 const ATTACK_WOOSH_PITCH: float = 0.85
 const GRAVITY: float = 1250.0
-const ATTACK_HIT_FRAMES: Array[int] = [4, 8, 12, 16, 20]
+const ATTACK_HIT_FRAMES: Array[int] = [4, 8, 12]
 const ATTACK_TURNAROUND_FRAME: int = 15
 const ATTACK_HITBOX_OFFSET: Vector2 = Vector2(38.0, -18.0)
 const OGRE_DESATURATION: float = 0.10
@@ -239,7 +239,7 @@ func _on_animation_finished() -> void:
 func _spawn_attack_indicator() -> void:
 	_clear_charge_indicator()
 	charge_indicator = ATTACK_INDICATOR_SCENE.instantiate() as AttackIndicator
-	charge_indicator.position = Vector2(0.0, -88.0)
+	charge_indicator.position = Vector2(0.0, -72.0)
 	charge_indicator.scale = Vector2(1.5, 1.5)
 	charge_indicator.speed_scale = 2.0
 	charge_indicator.loop_until_removed = true
@@ -273,7 +273,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	var damage: int = int(attacker.call("get_attack_damage")) if attacker != null and attacker.has_method("get_attack_damage") else (10 if attack_level <= 1 else 20)
 	HitEffect.spawn_hit(get_parent(), global_position + Vector2(0.0, -38.0), attacker_position, hit_effect_index)
 	hit_effect_index = posmod(hit_effect_index + 1, 3)
-	take_damage(damage, attack_level, signf(global_position.x - attacker_position.x))
+	HitEffect.apply_attack_damage(self, attacker, [damage, attack_level, signf(global_position.x - attacker_position.x)])
 
 func take_damage(amount: int, _attack_level: int = 1, direction: float = 0.0) -> void:
 	if dead:

@@ -9,9 +9,9 @@ const ATTACK_IMPACT_FRAME: int = 2
 const ATTACK_WOOSH_PITCH: float = 1.40
 const SMALL_SPIDER_SCENE: PackedScene = preload("res://scenes/smallspider.tscn")
 const ENEMY_HURT_SOUND: AudioStream = preload("res://assets/sounds/enemyhurt.mp3")
-const SPIDER_DESATURATION: float = 0.15
-const SPIDER_OVERLAY_COLOR: Color = Color(0.28, 0.36, 0.52, 1.0)
-const SPIDER_OVERLAY_STRENGTH: float = 0.15
+const SPIDER_DESATURATION: float = 0.45
+const SPIDER_OVERLAY_COLOR: Color = Color(0.46, 0.46, 0.46, 1.0)
+const SPIDER_OVERLAY_STRENGTH: float = 0.20
 const SPIDER_BRIGHTNESS: float = 1.0
 const SPIDER_VISIBILITY: float = 1.0
 const ENEMY_SCENE_TINT_SHADER: Shader = preload("res://shaders/enemy_scene_tint.gdshader")
@@ -204,7 +204,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	hit_effect_index = posmod(hit_effect_index + 1, 3)
 	var attack_level: int = int(attacker.call("get_attack_level")) if attacker != null and attacker.has_method("get_attack_level") else 1
 	var damage: int = int(attacker.call("get_attack_damage")) if attacker != null and attacker.has_method("get_attack_damage") else (10 if attack_level <= 1 else 20)
-	take_damage(damage, attack_level, signf(global_position.x - attacker_position.x))
+	HitEffect.apply_attack_damage(self, attacker, [damage, attack_level, signf(global_position.x - attacker_position.x)])
 
 func stun_from_parry(duration: float) -> void:
 	if dead:
@@ -214,7 +214,7 @@ func stun_from_parry(duration: float) -> void:
 
 func _spawn_attack_indicator() -> void:
 	var indicator: AnimatedSprite2D = ATTACK_INDICATOR_SCENE.instantiate() as AnimatedSprite2D
-	indicator.position = Vector2(0.0, -58.0)
+	indicator.position = Vector2(0.0, -52.0)
 	indicator.speed_scale = 1.5
 	add_child(indicator)
 

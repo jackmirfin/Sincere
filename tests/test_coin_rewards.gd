@@ -24,12 +24,46 @@ func test_cave_reward_room_contains_three_chests() -> void:
 	cave.free()
 
 
-func test_chest_reward_is_halved() -> void:
+func test_three_end_cave_chests_spread_coin_creation_across_frames() -> void:
+	var cave: Node2D = CAVE_SCENE.instantiate() as Node2D
+	add_child(cave)
+	await get_tree().process_frame
+	var interactables: Node2D = cave.get_node("interactables") as Node2D
+	var chests: Array[TreasureChest] = []
+	for child: Node in interactables.get_children():
+		var chest: TreasureChest = child as TreasureChest
+		if chest != null:
+			chests.append(chest)
+	assert(chests.size() == 3)
+	for chest: TreasureChest in chests:
+		assert(chest.coin_spawn_batch_size == CaveIntroSequence.END_REWARD_CHEST_BATCH_SIZE)
+		chest.call("_drop_coins")
+	var previous_count: int = _count_coin_pickups(interactables)
+	var maximum_added_in_one_frame: int = 0
+	for _frame: int in range(24):
+		await get_tree().process_frame
+		var current_count: int = _count_coin_pickups(interactables)
+		maximum_added_in_one_frame = maxi(maximum_added_in_one_frame, current_count - previous_count)
+		previous_count = current_count
+	assert(previous_count >= 54 and previous_count <= 81, "the three chests should keep their original coin quantity")
+	assert(maximum_added_in_one_frame <= 9, "end-cave chests should not instantiate every reward coin in a single frame")
+	cave.queue_free()
+	await get_tree().process_frame
+
+func _count_coin_pickups(parent: Node) -> int:
+	var count: int = 0
+	for child: Node in parent.get_children():
+		if child is CoinPickup:
+			count += 1
+	return count
+
+func test_chest_reward_amount_is_preserved() -> void:
 	var cave: Node2D = CAVE_SCENE.instantiate() as Node2D
 	var chest: TreasureChest = cave.get_node("interactables/chest") as TreasureChest
 	var profile: Dictionary = chest.get_drop_profile()
 	assert(int(profile["min_coins"]) == int(chest.coin_count_min * chest.coin_amount_multiplier / 2.0))
 	assert(int(profile["max_coins"]) == int(chest.coin_count_max * chest.coin_amount_multiplier / 2.0))
+	assert(float(profile["value_multiplier"]) == 1.0)
 	cave.free()
 
 

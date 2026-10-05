@@ -3,6 +3,7 @@ class_name TestShopAndElevator
 
 const SHOP_UI_SCENE: PackedScene = preload("res://scenes/shopui.tscn")
 const MIDWORLD2_SCENE: PackedScene = preload("res://scenes/midworld_2.tscn")
+const MIDWORLD3_SCENE: PackedScene = preload("res://scenes/midworld_3.tscn")
 const PLAYER_SCENE: PackedScene = preload("res://scenes/knight.tscn")
 
 func test_intro_run_moves_player_right_then_stops() -> void:
@@ -75,11 +76,10 @@ func test_buying_spends_coins_applies_effect_and_is_single_use() -> void:
 	shop.open(player)
 	assert(shop.shop_open)
 
-	var base_damage: int = player.get_attack_damage()
 	shop.selected_index = 0
 	assert(shop.buy() == true)
 	assert(int(currency.get("total_currency")) == 1670)
-	assert(player.get_attack_damage() == base_damage + 5)
+	assert(player.get_attack_damage() == 11, "the +5 raw damage upgrade should be included in the reduced baseline")
 	assert(shop.buy() == false)
 	assert(int(currency.get("total_currency")) == 1670)
 
@@ -178,6 +178,105 @@ func test_elevator_needs_lever_and_rider_then_rises_at_fourteen_tiles_per_second
 	assert(is_equal_approx(rider.global_position.y, start_rider_y - 14.0 * 16.0))
 
 	rider.queue_free()
+	world.queue_free()
+	await get_tree().process_frame
+
+func test_midworld3_shop_stock_tracks_prior_purchases_and_resin_has_icon() -> void:
+	var currency: Node = get_node("/root/CurrencyManager")
+	var purchase_history: Dictionary = currency.get("purchased_shop_items")
+	var previous_history: Dictionary = purchase_history.duplicate(true)
+	var previous_balance: int = int(currency.get("total_currency"))
+	var previous_torch_multiplier: float = float(currency.get("torch_duration_multiplier"))
+	purchase_history.clear()
+	var world: Node2D = MIDWORLD3_SCENE.instantiate() as Node2D
+	add_child(world)
+	await get_tree().process_frame
+	var shop: Shop = world.get_node("twilightshop") as Shop
+	assert(shop.shop_ui.items.size() == 3)
+	assert(String(shop.shop_ui.items[0]["name"]) == "Portable Charger")
+	assert(String(shop.shop_ui.items[1]["name"]) == "Whetstone")
+	assert(String(shop.shop_ui.items[2]["name"]) == "Resin")
+	assert(String(shop.shop_ui.items[2]["icon"]) == "res://assets/items/resin.png")
+	world.queue_free()
+	await get_tree().process_frame
+
+	currency.call("record_shop_purchase", &"whetstone")
+	world = MIDWORLD3_SCENE.instantiate() as Node2D
+	add_child(world)
+	await get_tree().process_frame
+	shop = world.get_node("twilightshop") as Shop
+	assert(shop.shop_ui.items.size() == 2)
+	assert(String(shop.shop_ui.items[0]["name"]) == "Portable Charger")
+	assert(String(shop.shop_ui.items[1]["name"]) == "Resin")
+	assert(shop.shop_ui.item_icons[1].texture == load("res://assets/items/resin.png"))
+	var player: PlayerController = world.get_node("knight") as PlayerController
+	assert(player.attack_damage_bonus == 5, "the previously purchased Whetstone should carry into the new level")
+	var original_torch_multiplier: float = float(currency.get("torch_duration_multiplier"))
+	currency.set("total_currency", 200)
+	shop.shop_ui.open(player)
+	shop.shop_ui.selected_index = 1
+	assert(shop.shop_ui.buy())
+	assert(is_equal_approx(float(currency.get("torch_duration_multiplier")), original_torch_multiplier * 1.5))
+	shop.shop_ui.close()
+	world.queue_free()
+	await get_tree().process_frame
+	purchase_history.clear()
+	purchase_history.merge(previous_history)
+	currency.set("total_currency", previous_balance)
+	currency.set("torch_duration_multiplier", previous_torch_multiplier)
+
+func test_midworld3_npc_uses_area_for_interaction_without_body_collision() -> void:
+	var world: Node2D = MIDWORLD3_SCENE.instantiate() as Node2D
+	add_child(world)
+	await get_tree().process_frame
+	var npc: Area2D = world.get_node("NPC_2") as Area2D
+	assert(npc != null)
+	assert(npc is BlacksmithNPC)
+	assert(npc.has_node("InteractPrompt"))
+	assert(npc.collision_layer == 0)
+	assert(npc.collision_mask == 2)
+	assert(npc.get_node("CollisionShape2D") is CollisionShape2D)
+	world.queue_free()
+	await get_tree().process_frame
+
+func test_midworld3_blacksmith_interaction_does_not_open_upgrade_shop() -> void:
+	var world: Node2D = MIDWORLD3_SCENE.instantiate() as Node2D
+	add_child(world)
+	await get_tree().process_frame
+	var npc: BlacksmithNPC = world.get_node("NPC_2") as BlacksmithNPC
+	var shop: Shop = world.get_node("twilightshop") as Shop
+	var player: PlayerController = world.get_node("knight") as PlayerController
+	assert(shop.interaction_blocker == npc)
+	assert(npc.blocked_by_shop == shop)
+	player.set_physics_process(false)
+	player.global_position = npc.global_position + Vector2(0.0, 50.0)
+	npc._on_body_entered(player)
+	assert(npc.player_in_range == player)
+	assert(player.global_position.distance_to(shop.global_position + shop.interaction_offset) < shop.interaction_radius)
+	shop._physics_process(0.0)
+	assert(not shop.in_range, "the upgrade shop should yield interaction priority while the player is beside the blacksmith")
+	Input.action_press("interact")
+	npc._process(0.0)
+	shop._physics_process(0.0)
+	Input.action_release("interact")
+	assert(npc.conversation_active)
+	assert(not shop.shop_ui.shop_open)
+	await get_tree().create_timer(BlacksmithNPC.DIALOGUE_HOLD_SECONDS + 0.1).timeout
+	assert(npc.blacksmith_ui != null and npc.blacksmith_ui.blacksmith_open)
+	assert(not shop.shop_ui.shop_open)
+	npc.blacksmith_ui.close()
+	world.queue_free()
+	await get_tree().process_frame
+
+func test_midworld3_sprite_alignment_resets_after_elevator_ride() -> void:
+	var world: Node2D = MIDWORLD3_SCENE.instantiate() as Node2D
+	add_child(world)
+	await get_tree().process_frame
+	var player: PlayerController = world.get_node("knight") as PlayerController
+	assert(is_equal_approx(player.elevator_sprite_y_offset, 8.0))
+	assert(is_equal_approx(player.animated_sprite.position.y, -28.0))
+	player.set_elevator_riding(false)
+	assert(is_equal_approx(player.animated_sprite.position.y, -36.0))
 	world.queue_free()
 	await get_tree().process_frame
 

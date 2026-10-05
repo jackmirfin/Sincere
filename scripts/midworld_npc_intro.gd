@@ -69,6 +69,9 @@ func start_npc_intro() -> void:
 	get_tree().root.set_meta(INTRO_SEEN_META, true)
 	phase = IntroPhase.NPC_HELLO
 	input_enabled = false
+	await player.fall_for_cinematic()
+	if phase != IntroPhase.NPC_HELLO:
+		return
 	player.set_teleport_locked(true)
 	player.finish_cinematic_animation()
 	original_zoom = player_camera.zoom

@@ -72,10 +72,11 @@ func test_ogre_notices_player_then_runs_and_attacks() -> void:
 	assert(windup_seen, "Ogre did not telegraph before attacking")
 	assert(attack_seen and ogre.animated_sprite.animation == &"attack", "Ogre attack warning disappeared during its swing")
 	assert(is_equal_approx(ogre.charge_indicator.scale.x, 1.5), "Ogre attack indicator was not enlarged for visibility")
+	assert(is_equal_approx(ogre.charge_indicator.position.y, -72.0), "Ogre attack indicator should sit closer to its head")
 	world.queue_free()
 	await get_tree().process_frame
 
-func test_ogre_weapon_activates_only_on_the_five_requested_frames() -> void:
+func test_ogre_weapon_activates_only_on_the_three_requested_frames() -> void:
 	var ogre: OgreEnemy = OGRE_SCENE.instantiate() as OgreEnemy
 	add_child(ogre)
 	await get_tree().process_frame
@@ -97,18 +98,13 @@ func test_ogre_weapon_activates_only_on_the_five_requested_frames() -> void:
 	assert(ogre.animated_sprite.sprite_frames.has_animation(&"notice"))
 	assert(ogre.animated_sprite.sprite_frames.has_animation(&"run"))
 	assert(ogre.animated_sprite.sprite_frames.get_frame_count(&"attack") == 25)
-	assert(OgreEnemy.ATTACK_HIT_FRAMES == [4, 8, 12, 16, 20])
+	assert(OgreEnemy.ATTACK_HIT_FRAMES == [4, 8, 12])
 	assert(OgreEnemy.ATTACK_TURNAROUND_FRAME == 15)
 	assert(ogre.attack_audio.stream == OgreEnemy.ATTACK_SOUND)
 	ogre.set_physics_process(false)
 	ogre._change_state(OgreEnemy.OgreState.ATTACK)
 	ogre.animated_sprite.pause()
 	for impact_frame: int in OgreEnemy.ATTACK_HIT_FRAMES:
-		if impact_frame == 16:
-			ogre.animated_sprite.frame = OgreEnemy.ATTACK_TURNAROUND_FRAME
-			await get_tree().process_frame
-			assert(ogre.facing == -1 and ogre.animated_sprite.flip_h,
-				"Ogre should turn around after its third strike")
 		ogre.animated_sprite.frame = impact_frame
 		await get_tree().process_frame
 		assert(not ogre.weapon_shape.disabled and ogre.weapon_hitbox.monitoring,
@@ -123,8 +119,12 @@ func test_ogre_weapon_activates_only_on_the_five_requested_frames() -> void:
 		assert(ogre.weapon_shape.disabled and not ogre.weapon_hitbox.monitoring,
 			"weapon remained active after attack frame %d" % impact_frame)
 		assert(not ogre.can_hit_player(), "Ogre damage should be rejected outside impact frames")
-	assert(ogre.attack_hit_count == 5)
-	assert(ogre.attack_hit_frames_seen == [4, 8, 12, 16, 20])
+	ogre.animated_sprite.frame = OgreEnemy.ATTACK_TURNAROUND_FRAME
+	await get_tree().process_frame
+	assert(ogre.facing == -1 and ogre.animated_sprite.flip_h,
+		"Ogre should turn around after its third strike")
+	assert(ogre.attack_hit_count == 3)
+	assert(ogre.attack_hit_frames_seen == [4, 8, 12])
 	ogre.queue_free()
 	await get_tree().process_frame
 

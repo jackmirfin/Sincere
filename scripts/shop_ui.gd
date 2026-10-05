@@ -79,6 +79,28 @@ func default_items() -> Array[Dictionary]:
 		{"id": &"coffee", "name": "Coffee", "price": 135, "desc": "Increase movement speed", "icon": "res://assets/items/coffee.png"},
 	]
 
+func remaining_midworld_items() -> Array[Dictionary]:
+	var main_loop: MainLoop = Engine.get_main_loop()
+	var tree: SceneTree = main_loop as SceneTree
+	var currency: Node = tree.root.get_node_or_null("CurrencyManager") if tree != null else null
+	var remaining_items: Array[Dictionary] = []
+	var catalog: Array[Dictionary] = default_items()
+	for item_id: StringName in [&"portablecharger", &"whetstone"]:
+		for item: Dictionary in catalog:
+			if StringName(item["id"]) != item_id:
+				continue
+			if currency == null or not bool(currency.call("has_purchased_shop_item", item_id)):
+				remaining_items.append(item.duplicate(true))
+	if currency == null or not bool(currency.call("has_purchased_shop_item", &"resin")):
+		remaining_items.append({
+			"id": &"resin",
+			"name": "Resin",
+			"price": 200,
+			"desc": "Makes torches last longer.",
+			"icon": "res://assets/items/resin.png"
+		})
+	return remaining_items
+
 func _build() -> void:
 	backdrop = ColorRect.new()
 	backdrop.name = "Backdrop"
@@ -368,6 +390,8 @@ func buy() -> bool:
 		coin_audio.play()
 	sold[selected_index] = true
 	_apply_effect(item)
+	if currency.has_method("record_shop_purchase"):
+		currency.call("record_shop_purchase", StringName(item["id"]))
 	_refresh()
 	return true
 
@@ -381,3 +405,7 @@ func _apply_effect(item: Dictionary) -> void:
 			player.add_max_health_percent(0.10)
 		&"coffee":
 			player.add_move_speed_percent(0.10)
+		&"resin":
+			var currency: Node = get_node_or_null("/root/CurrencyManager")
+			if currency != null and currency.has_method("extend_torch_duration"):
+				currency.call("extend_torch_duration", 1.5)

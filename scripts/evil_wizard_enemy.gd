@@ -216,7 +216,7 @@ func _floor_point_at(target_x: float, reference_y: float) -> Vector2:
 
 func _spawn_melee_indicator() -> void:
 	var indicator: AnimatedSprite2D = ATTACK_INDICATOR_SCENE.instantiate() as AnimatedSprite2D
-	indicator.position = Vector2(0.0, -58.0)
+	indicator.position = Vector2(0.0, -52.0)
 	indicator.speed_scale = 1.45
 	add_child(indicator)
 
@@ -242,7 +242,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	HitEffect.spawn_hit(get_parent(), global_position + Vector2(0.0, -22.0), attacker_position, hit_effect_index)
 	hit_effect_index = posmod(hit_effect_index + 1, 3)
 	var damage: int = int(attacker.call("get_attack_damage")) if attacker != null and attacker.has_method("get_attack_damage") else (10 if attack_level == 1 else 20)
-	take_damage(damage)
+	HitEffect.apply_attack_damage(self, attacker, [damage])
 
 func stun_from_parry(duration: float) -> void:
 	if dead or state == WizardState.SHIELD:

@@ -17,6 +17,8 @@ const DIALOGUE_BOX_HEIGHT: float = 220.0
 const MAX_DROP_WAIT: float = 4.0
 const PAUSE_FOCUS_FRAME: int = 3
 const BOSS_PATH: NodePath = NodePath("bossfight/evilwizard")
+const END_REWARD_CHEST_PATHS: Array[NodePath] = [NodePath("interactables/chest"), NodePath("interactables/chest2"), NodePath("interactables/chest3")]
+const END_REWARD_CHEST_BATCH_SIZE: int = 3
 const ROUTE: Array[NodePath] = [
 	NodePath("interactables/lever"),
 	NodePath("interactables/lever2"),
@@ -71,10 +73,17 @@ func _ready() -> void:
 		original_limit_top = player_camera.limit_top
 		original_limit_bottom = player_camera.limit_bottom
 	end_gate = get_node_or_null("rooms_gates/endgate") as CaveGate
+	_configure_end_reward_chests()
 	dialogue_ui = DIALOGUE_UI_SCENE.instantiate() as NpcDialogueUI
 	dialogue_ui.characters_per_second = 90.0
 	add_child(dialogue_ui)
 	call_deferred("play_opening_camera_sequence")
+
+func _configure_end_reward_chests() -> void:
+	for chest_path: NodePath in END_REWARD_CHEST_PATHS:
+		var chest: TreasureChest = get_node_or_null(chest_path) as TreasureChest
+		if chest != null:
+			chest.set_coin_spawn_batch_size(END_REWARD_CHEST_BATCH_SIZE)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not dialogue_active or not event.is_pressed() or event.is_echo():

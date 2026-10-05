@@ -19,9 +19,12 @@ script = ExtResource("2_player_controller")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=305706238]
 position = Vector2(0, -36)
 sprite_frames = ExtResource("1_knight_frames")
-animation = &"hit"
+animation = &"axeattack"
+frame = 10
+frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1575968861]
+visible = false
 position = Vector2(-3, -10.5)
 shape = ExtResource("3_body_shape")
 
@@ -31,6 +34,7 @@ collision_layer = 2
 collision_mask = 16
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1861859765]
+visible = false
 position = Vector2(-3.5, 19.5)
 shape = ExtResource("5_hurt_shape")
 
@@ -41,10 +45,12 @@ collision_mask = 8
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox" unique_id=941089570]
-position = Vector2(-3.5, 0)
+visible = false
+position = Vector2(-9, 0)
 shape = ExtResource("6_attack_shape")
 
 [node name="GroundPoundHitbox" type="Area2D" parent="." unique_id=2105386611]
+visible = false
 collision_layer = 4
 collision_mask = 8
 monitoring = false

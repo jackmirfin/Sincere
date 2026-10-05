@@ -44,9 +44,11 @@ func test_big_spider_has_melee_attack_and_combat_shapes() -> void:
 	assert(scene_tint != null)
 	assert(is_equal_approx(spider.animated_sprite.modulate.a, 1.0), "Big spider opacity should be restored to 100%")
 	assert(is_equal_approx(float(scene_tint.get_shader_parameter("desaturation")), BigSpiderEnemy.SPIDER_DESATURATION))
-	assert(is_equal_approx(float(scene_tint.get_shader_parameter("desaturation")), 0.15), "Big spiders should retain about 85% of their original saturation")
+	assert(is_equal_approx(float(scene_tint.get_shader_parameter("desaturation")), 0.45), "Twilight big spiders should have a noticeably desaturated grey appearance")
 	assert(is_equal_approx(float(scene_tint.get_shader_parameter("overlay_strength")), BigSpiderEnemy.SPIDER_OVERLAY_STRENGTH))
-	assert(is_equal_approx(float(scene_tint.get_shader_parameter("overlay_strength")), 0.15))
+	assert(is_equal_approx(float(scene_tint.get_shader_parameter("overlay_strength")), 0.20))
+	var overlay_color: Color = scene_tint.get_shader_parameter("overlay_color") as Color
+	assert(is_equal_approx(overlay_color.r, overlay_color.g) and is_equal_approx(overlay_color.g, overlay_color.b), "spider overlay should be neutral grey")
 	assert(is_equal_approx(float(scene_tint.get_shader_parameter("brightness")), 1.0))
 	assert(spider.animated_sprite.sprite_frames.get_frame_count(&"attack") > BigSpiderEnemy.ATTACK_IMPACT_FRAME)
 	assert(spider.weapon_shape.disabled)

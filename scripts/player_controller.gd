@@ -4,11 +4,12 @@ class_name PlayerController
 signal gameplay_state_changed(state: StringName)
 signal health_changed(current_health: int, maximum_health: int)
 signal speed_boost_changed(active: bool, time_remaining: float)
+signal cinematic_fall_finished
 
-enum PlayerState { LOCOMOTION, TURN, CROUCH_TRANSITION, CROUCH, CROUCH_ATTACK, SLIDE_START, SLIDE, SLIDE_END, WALL_HANG, WALL_CLIMB, WALL_SLIDE, ATTACK1, ATTACK2, ATTACK3, SPEAR_ATTACK, GROUND_POUND, GROUND_POUND_SLAM, JUMP, JUMP_TRANSITION, FALL, HIT, DEATH, ROLL, DASH, BLOCK_START, BLOCKING, UNBLOCK, PARRY }
+enum PlayerState { LOCOMOTION, TURN, CROUCH_TRANSITION, CROUCH, CROUCH_ATTACK, SLIDE_START, SLIDE, SLIDE_END, WALL_HANG, WALL_CLIMB, WALL_SLIDE, ATTACK1, ATTACK2, ATTACK3, SPEAR_ATTACK, GROUND_POUND, GROUND_POUND_SLAM, JUMP, JUMP_TRANSITION, FALL, HIT, DEATH, ROLL, DASH, BLOCK_START, BLOCKING, UNBLOCK, PARRY, DAGGER_ATTACK, AXE_ATTACK }
 
-const REQUIRED_ANIMATIONS: Array[StringName] = [&"idle", &"run", &"turn_around", &"crouch", &"crouch_transition", &"crouchwalk", &"crouchattack", &"slide", &"slide_transitionstart", &"slidefull", &"wallhang", &"wallclimb", &"wallclimb_no_movement", &"wallslide", &"attack", &"attack_no_movement", &"attack2", &"attack2_no_movement", &"attackcombo", &"attackcombo_no_movement", &"spearattack", &"jump", &"jump_fall_inbetween", &"fall", &"hit", &"block", &"blocking", &"parry", &"unblocking", &"death", &"death_no_movement", &"roll", &"dash"]
-const EXPECTED_FRAME_COUNTS: Dictionary = {&"idle": 10, &"run": 10, &"turn_around": 3, &"crouch_transition": 1, &"crouch": 1, &"crouchwalk": 8, &"crouchattack": 4, &"slide": 2, &"slide_transitionstart": 1, &"wallhang": 1, &"wallclimb": 17, &"wallclimb_no_movement": 7, &"wallslide": 3, &"attack": 4, &"attack_no_movement": 8, &"attack2": 6, &"attack2_no_movement": 6, &"spearattack": 8, &"jump": 3, &"jump_fall_inbetween": 2, &"fall": 3, &"hit": 1, &"death": 10, &"death_no_movement": 10, &"roll": 12, &"dash": 2}
+const REQUIRED_ANIMATIONS: Array[StringName] = [&"idle", &"run", &"turn_around", &"crouch", &"crouch_transition", &"crouchwalk", &"crouchattack", &"slide", &"slide_transitionstart", &"slidefull", &"wallhang", &"wallclimb", &"wallclimb_no_movement", &"wallslide", &"attack", &"attack_no_movement", &"attack2", &"attack2_no_movement", &"attackcombo", &"attackcombo_no_movement", &"spearattack", &"daggerattack", &"axeattack", &"jump", &"jump_fall_inbetween", &"fall", &"hit", &"block", &"blocking", &"parry", &"unblocking", &"death", &"death_no_movement", &"roll", &"dash"]
+const EXPECTED_FRAME_COUNTS: Dictionary = {&"idle": 10, &"run": 10, &"turn_around": 3, &"crouch_transition": 1, &"crouch": 1, &"crouchwalk": 8, &"crouchattack": 4, &"slide": 2, &"slide_transitionstart": 1, &"wallhang": 1, &"wallclimb": 17, &"wallclimb_no_movement": 7, &"wallslide": 3, &"attack": 4, &"attack_no_movement": 8, &"attack2": 6, &"attack2_no_movement": 6, &"spearattack": 8, &"daggerattack": 8, &"axeattack": 9, &"jump": 3, &"jump_fall_inbetween": 2, &"fall": 3, &"hit": 1, &"death": 10, &"death_no_movement": 10, &"roll": 12, &"dash": 2}
 const STEP_UP_HEIGHT: float = 16.0
 const STEP_FORWARD_CLEARANCE: float = 4.0
 const MOVE_SPEED: float = 202.0
@@ -35,7 +36,7 @@ const PARRY_INVULNERABILITY_DURATION: float = 1.5
 const PARRY_STUN_DURATION: float = 0.8
 const PARRY_ENEMY_KNOCKBACK: float = 105.0
 const HIT_SLOWMO_SCALE: float = 0.72
-const HIT_SLOWMO_DURATION: float = 0.24
+const HIT_SLOWMO_DURATION: float = 1.0
 const BLOCK_DAMAGE_DIVISOR: int = 5
 const WALL_JUMP_VELOCITY: Vector2 = Vector2(260.0, -360.0)
 const WALL_AWAY_JUMP_VELOCITY: Vector2 = Vector2(360.0, -500.0)
@@ -49,11 +50,20 @@ const SWING_VOLUME_DB: float = -1.94
 const SHIELD_IMPACT_SOUND: AudioStream = preload("res://assets/sounds/shieldimpact.mp3")
 const BLOCK_TAP_PARRY_THRESHOLD: float = 0.18
 const BLOCKED_ENEMY_KNOCKBACK: float = 260.0
-const SPEAR_IMPACT_FRAMES: Array[int] = [4, 6]
+const SPEAR_IMPACT_FRAMES: Array[int] = [2, 4, 6]
+const SPEAR_LUNGE_SPEED: float = 300.0
+const DAGGER_IMPACT_FRAMES: Array[int] = [1, 3, 7]
+const DAGGER_LUNGE_SPEED: float = 120.0
+const AXE_IMPACT_FRAMES: Array[int] = [1, 4, 8]
+const AXE_CRITICAL_FRAMES: Array[int] = [4, 8]
+const AXE_LUNGE_SPEED: float = 160.0
 const PARRY_SOUND_PITCH: float = 1.22
 const STANDING_SHAPE: Shape2D = preload("res://resources/player_body_shape.tres")
 const CROUCH_SHAPE: Shape2D = preload("res://resources/player_crouch_shape.tres")
 const SPRITE_STANDING_Y: float = -36.0
+const SPRITE_SPEAR_Y: float = -16.0
+const SPRITE_DAGGER_Y: float = -21.0
+const SPRITE_AXE_Y: float = -26.0
 const SPRITE_SHIELD_Y: float = -16.0
 const SPRITE_LOW_Y: float = -31.0
 const SPRITE_WALL_Y: float = -36.0
@@ -65,6 +75,7 @@ const MENU_SPRITE_OFFSET_Y: float = 20.0
 @export var auto_start: bool = true
 @export var play_outofbattery_on_landing: bool = false
 @export_range(1, 6, 1) var max_health: int = 6
+@export var elevator_sprite_y_offset: float = 0.0
 
 @export_group("Kill Speed Boost")
 @export var quick_kill_window: float = 4.0
@@ -102,12 +113,21 @@ var combo_buffer_time: float = 0.0
 var combo_link_time: float = 0.0
 var jump_transition_started: bool = false
 var attack_queued: bool = false
+var queued_weapon_attack: PlayerState = PlayerState.ATTACK1
+var has_queued_weapon_attack: bool = false
 var was_grounded: bool = false
 var crouched: bool = false
 var dead: bool = false
 var health: int = 6
 var attack_id: int = 0
 var spear_hitbox_active: bool = false
+var dagger_hitbox_active: bool = false
+var axe_hitbox_active: bool = false
+var spear_lunge_applied: bool = false
+var spear_critical_active: bool = false
+var pending_spear_hits: Dictionary = {}
+var pending_spear_attack_id: int = -1
+var spear_hit_resolution_scheduled: bool = false
 var hit_stop_time: float = 0.0
 var coyote_time: float = 0.0
 var wall_jump_lock_time: float = 0.0
@@ -124,6 +144,7 @@ var slide_momentum_active: bool = false
 var slide_queued: bool = false
 var mantle_time: float = 0.0
 var teleport_locked: bool = false
+var cinematic_fall_active: bool = false
 var exit_run_active: bool = false
 var exit_run_speed: float = 240.0
 var intro_run_active: bool = false
@@ -133,6 +154,7 @@ var elevator_ride_active: bool = false
 var attack_damage_bonus: int = 0
 var move_speed_multiplier: float = 1.0
 var hit_slowdown_active: bool = false
+var hit_slowmo_token: int = 0
 var speed_boost_time: float = 0.0
 var quick_kill_time: float = 0.0
 var quick_kill_count: int = 0
@@ -196,9 +218,45 @@ func _configure_spear_attack_animation() -> void:
 		atlas.region = Rect2(Vector2(source_index * 100, 0), Vector2(100, 40))
 		frames.add_frame(&"spearattack", atlas)
 
+func _configure_dagger_attack_animation() -> void:
+	var texture: Texture2D = load("res://assets/characters/knight/daggerattack.png") as Texture2D
+	if texture == null:
+		return
+	var frames: SpriteFrames = animated_sprite.sprite_frames
+	if frames.has_animation(&"daggerattack"):
+		return
+	frames.add_animation(&"daggerattack")
+	frames.set_animation_speed(&"daggerattack", 16.0)
+	frames.set_animation_loop(&"daggerattack", false)
+	for frame_index: int in range(8):
+		var atlas: AtlasTexture = AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(Vector2(frame_index * 64, 0), Vector2(64, 50))
+		frames.add_frame(&"daggerattack", atlas)
+
+func _configure_axe_attack_animation() -> void:
+	var texture: Texture2D = load("res://assets/characters/knight/axeattack.png") as Texture2D
+	if texture == null:
+		return
+	var frames: SpriteFrames = animated_sprite.sprite_frames
+	if frames.has_animation(&"axeattack"):
+		return
+	frames.add_animation(&"axeattack")
+	frames.set_animation_speed(&"axeattack", 16.0)
+	frames.set_animation_loop(&"axeattack", false)
+	# Expand the six 80x60 source poses to nine timeline frames for impacts on 1, 4, and 8.
+	var source_frame_indices: Array[int] = [0, 1, 2, 3, 3, 4, 4, 5, 5]
+	for source_index: int in source_frame_indices:
+		var atlas: AtlasTexture = AtlasTexture.new()
+		atlas.atlas = texture
+		atlas.region = Rect2(Vector2(source_index * 80, 0), Vector2(80, 60))
+		frames.add_frame(&"axeattack", atlas)
+
 func _ensure_special_animations() -> void:
 	_configure_stop_charging_animation()
 	_configure_spear_attack_animation()
+	_configure_dagger_attack_animation()
+	_configure_axe_attack_animation()
 	_add_sheet_animation(&"groundpound", "res://assets/characters/knight/groundpound.png", Vector2(60, 80), 6, 10.0, true)
 	_add_sheet_animation(&"groundpoundslam", "res://assets/characters/knight/groundpoundslam.png", Vector2(60, 80), 8, 10.0, false)
 	_add_sheet_animation(&"shrug", "res://assets/characters/knight/shrug.png", Vector2(120, 80), 5, 7.0, false)
@@ -242,6 +300,9 @@ func _ready() -> void:
 	_validate_animations()
 	_set_animation(&"idle", true)
 	was_grounded = is_on_floor()
+	var currency: Node = get_node_or_null("/root/CurrencyManager")
+	if currency != null and currency.has_method("apply_purchased_upgrades"):
+		currency.call("apply_purchased_upgrades", self)
 
 func _physics_process(delta: float) -> void:
 	_update_enemy_kill_tracking()
@@ -254,9 +315,12 @@ func _physics_process(delta: float) -> void:
 		return
 	if elevator_ride_active:
 		velocity = Vector2.ZERO
-		animated_sprite.position = Vector2(0.0, SPRITE_STANDING_Y)
+		animated_sprite.position = Vector2(0.0, SPRITE_STANDING_Y + elevator_sprite_y_offset)
 		_set_animation(&"idle")
 		was_grounded = is_on_floor()
+		return
+	if cinematic_fall_active:
+		_update_cinematic_fall(delta)
 		return
 	if teleport_locked:
 		velocity = Vector2.ZERO
@@ -269,6 +333,14 @@ func _physics_process(delta: float) -> void:
 		return
 	if hit_stop_time > 0.0:
 		hit_stop_time = maxf(0.0, hit_stop_time - delta)
+		if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK]:
+			if Input.is_action_just_pressed("dodge") and not dead:
+				_change_state(PlayerState.ROLL if is_on_floor() else PlayerState.DASH)
+			elif Input.is_action_just_pressed("block") and not dead:
+				block_press_time = state_time
+				_change_state(PlayerState.BLOCK_START)
+			else:
+				_queue_weapon_attack_input()
 		return
 	if mantle_time > 0.0:
 		velocity = Vector2.ZERO
@@ -356,19 +428,68 @@ func get_effective_move_speed() -> float:
 
 
 func _has_slide_cancel_input() -> bool:
-	return Input.is_action_just_pressed("left") or Input.is_action_just_pressed("right") or Input.is_action_just_pressed("crouch") or Input.is_action_just_pressed("dodge") or Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("spear_attack") or Input.is_action_just_pressed("interact")
+	return Input.is_action_just_pressed("left") or Input.is_action_just_pressed("right") or Input.is_action_just_pressed("crouch") or Input.is_action_just_pressed("dodge") or Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("spear_attack") or Input.is_action_just_pressed("axe_attack") or Input.is_action_just_pressed("interact")
 
 func _has_held_slide_movement() -> bool:
 	return Input.is_action_pressed("left") or Input.is_action_pressed("right")
 
+func _queue_weapon_attack_input() -> bool:
+	if state not in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK]:
+		return false
+	if Input.is_action_just_pressed("axe_attack"):
+		_queue_weapon_attack(PlayerState.AXE_ATTACK)
+		return true
+	if Input.is_action_just_pressed("dagger_attack"):
+		_queue_weapon_attack(PlayerState.DAGGER_ATTACK)
+		return true
+	if Input.is_action_just_pressed("spear_attack"):
+		_queue_weapon_attack(PlayerState.SPEAR_ATTACK)
+		return true
+	if Input.is_action_just_pressed("attack"):
+		if state == PlayerState.ATTACK1 and state_time > 0.04:
+			queued_weapon_attack = PlayerState.ATTACK1
+			has_queued_weapon_attack = false
+			attack_queued = true
+			combo_buffer_time = COMBO_BUFFER_DURATION
+		elif state == PlayerState.ATTACK2 and state_time > 0.04:
+			queued_weapon_attack = PlayerState.ATTACK1
+			has_queued_weapon_attack = false
+			attack_queued = true
+			combo_buffer_time = COMBO_BUFFER_DURATION
+		else:
+			_queue_weapon_attack(PlayerState.ATTACK1)
+		return true
+	return false
+
+func _queue_weapon_attack(next_state: PlayerState) -> void:
+	queued_weapon_attack = next_state
+	has_queued_weapon_attack = true
+	attack_queued = false
+	combo_buffer_time = 0.0
+
+func _start_queued_weapon_attack() -> bool:
+	if not has_queued_weapon_attack:
+		return false
+	var next_state: PlayerState = queued_weapon_attack
+	has_queued_weapon_attack = false
+	_begin_hand_attack(next_state)
+	return true
+
 func _read_action_edges() -> void:
 	if state in [PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
-		if Input.is_action_just_pressed("dodge") or Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("spear_attack") or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("crouch"):
+		if Input.is_action_just_pressed("dodge") or Input.is_action_just_pressed("attack") or Input.is_action_just_pressed("spear_attack") or Input.is_action_just_pressed("dagger_attack") or Input.is_action_just_pressed("axe_attack") or Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("crouch"):
 			if state == PlayerState.PARRY and block_slowmo_active:
 				pass
 			_change_state(_locomotion_state())
 		else:
 			return
+	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK] and Input.is_action_just_pressed("dodge") and not dead:
+		_change_state(PlayerState.ROLL if is_on_floor() else PlayerState.DASH)
+		return
+	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK] and _queue_weapon_attack_input():
+		return
+	if state in [PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE] and _try_override_attack_input():
+		return
 	if state in [PlayerState.SLIDE_START, PlayerState.SLIDE] and Input.is_action_just_pressed("jump"):
 		crouched = false
 		slide_queued = false
@@ -408,6 +529,18 @@ func _read_action_edges() -> void:
 		combo_buffer_time = 0.0
 		combo_link_time = 0.0
 		_change_state(PlayerState.SPEAR_ATTACK)
+	if Input.is_action_just_pressed("dagger_attack") and _can_start_attack():
+		crouched = false
+		attack_queued = false
+		combo_buffer_time = 0.0
+		combo_link_time = 0.0
+		_change_state(PlayerState.DAGGER_ATTACK)
+	if Input.is_action_just_pressed("axe_attack") and _can_start_attack():
+		crouched = false
+		attack_queued = false
+		combo_buffer_time = 0.0
+		combo_link_time = 0.0
+		_change_state(PlayerState.AXE_ATTACK)
 	if Input.is_action_just_pressed("attack"):
 		if state in [PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE]:
 			_change_state(PlayerState.CROUCH_ATTACK if crouched else PlayerState.ATTACK1)
@@ -443,6 +576,47 @@ func _read_action_edges() -> void:
 			jump_buffer_time = 0.0
 			_change_state(PlayerState.JUMP)
 
+func _try_override_attack_input() -> bool:
+	if Input.is_action_just_pressed("axe_attack"):
+		_begin_hand_attack(PlayerState.AXE_ATTACK)
+		return true
+	if Input.is_action_just_pressed("dagger_attack"):
+		_begin_hand_attack(PlayerState.DAGGER_ATTACK)
+		return true
+	if Input.is_action_just_pressed("spear_attack"):
+		_begin_hand_attack(PlayerState.SPEAR_ATTACK)
+		return true
+	if not Input.is_action_just_pressed("attack"):
+		return false
+	var next_state: PlayerState = PlayerState.ATTACK1
+	if state == PlayerState.ATTACK1:
+		next_state = PlayerState.ATTACK2
+	elif state == PlayerState.ATTACK2:
+		next_state = PlayerState.ATTACK3
+	elif state in [PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE] and crouched:
+		next_state = PlayerState.CROUCH_ATTACK
+	_begin_hand_attack(next_state)
+	return true
+
+func _begin_hand_attack(next_state: PlayerState) -> void:
+	var restarting_current_attack: bool = state == next_state
+	if next_state in [PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK]:
+		attack_shape.disabled = true
+		attack_hitbox.monitoring = false
+		spear_hitbox_active = false
+		dagger_hitbox_active = false
+		axe_hitbox_active = false
+	if next_state != PlayerState.CROUCH_ATTACK:
+		crouched = false
+	attack_queued = false
+	has_queued_weapon_attack = false
+	combo_buffer_time = 0.0
+	combo_link_time = 0.0
+	_change_state(next_state, true)
+	if restarting_current_attack:
+		animated_sprite.frame = 0
+		animated_sprite.frame_progress = 0.0
+
 func get_wall_jump_velocity(wall_normal: Vector2, horizontal_input: float) -> Vector2:
 	var away_direction: float = signf(wall_normal.x)
 	var jumping_away: bool = horizontal_input * wall_normal.x > 0.1
@@ -461,6 +635,8 @@ func _apply_physics(delta: float) -> void:
 	if state == PlayerState.TURN and animated_sprite.frame >= 1:
 		facing = turn_target_facing
 	var grounded: bool = is_on_floor()
+	if grounded and state == PlayerState.SPEAR_ATTACK:
+		velocity.y = 0.0
 	if not grounded:
 		var gravity: float = rising_gravity if velocity.y < 0.0 else falling_gravity
 		velocity.y += gravity * delta
@@ -474,7 +650,7 @@ func _apply_physics(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
 	elif state == PlayerState.DEATH:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
-	elif state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.CROUCH_ATTACK, PlayerState.HIT, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_END, PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
+	elif state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK, PlayerState.HIT, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_END, PlayerState.BLOCK_START, PlayerState.BLOCKING, PlayerState.UNBLOCK, PlayerState.PARRY]:
 		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
 	elif state == PlayerState.DASH:
 		velocity.x = facing * get_effective_move_speed() * 1.7
@@ -495,9 +671,9 @@ func _apply_physics(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, horizontal_input * target_speed, ACCELERATION * boost_multiplier * delta if absf(horizontal_input) > 0.01 else FRICTION * delta)
 	if horizontal_input != 0.0 and state in [PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE]:
 		facing = 1 if horizontal_input > 0.0 else -1
-	if horizontal_input != 0.0 and state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.CROUCH_ATTACK]:
+	if horizontal_input != 0.0 and state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK]:
 		facing = 1 if horizontal_input > 0.0 else -1
-	if horizontal_input != 0.0 and wall_jump_lock_time <= 0.0 and state not in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DEATH, PlayerState.HIT, PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.DASH]:
+	if horizontal_input != 0.0 and wall_jump_lock_time <= 0.0 and state not in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.DEATH, PlayerState.HIT, PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.DASH]:
 		var new_facing: int = 1 if horizontal_input > 0.0 else -1
 		if new_facing != facing and grounded and absf(velocity.x) >= TURN_SPEED_THRESHOLD and state == PlayerState.LOCOMOTION:
 			turn_target_facing = new_facing
@@ -542,7 +718,7 @@ func _try_step_up(horizontal_input: float) -> bool:
 func _try_forgiving_mantle() -> void:
 	if is_on_floor() or wall_contact_normal == Vector2.ZERO or not wall_contact_can_attach or velocity.y < -80.0:
 		return
-	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.HIT, PlayerState.DEATH, PlayerState.ROLL, PlayerState.DASH]:
+	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.HIT, PlayerState.DEATH, PlayerState.ROLL, PlayerState.DASH]:
 		return
 	var wall_direction: float = -signf(wall_contact_normal.x)
 	if is_zero_approx(wall_direction):
@@ -606,7 +782,7 @@ func _update_gameplay_state(_delta: float) -> void:
 		else:
 			_change_state(_locomotion_state())
 		return
-	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.CROUCH_ATTACK, PlayerState.ROLL, PlayerState.DASH, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.SLIDE_END]:
+	if state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK, PlayerState.ROLL, PlayerState.DASH, PlayerState.TURN, PlayerState.CROUCH_TRANSITION, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.SLIDE_END]:
 		if state == PlayerState.DASH and state_time >= DASH_DURATION:
 			_change_state(_locomotion_state())
 		elif state == PlayerState.ROLL and state_time >= ACTION_DURATION:
@@ -686,6 +862,15 @@ func _update_animation() -> void:
 		animated_sprite.position.y = SPRITE_WALL_Y
 	elif state in [PlayerState.CROUCH_TRANSITION, PlayerState.CROUCH, PlayerState.CROUCH_ATTACK, PlayerState.SLIDE_START, PlayerState.SLIDE, PlayerState.SLIDE_END]:
 		animated_sprite.position.y = SPRITE_LOW_Y
+	elif state == PlayerState.SPEAR_ATTACK:
+		# The spear sheet is only 40 px tall (other combat sheets are 80 px),
+		# so lower its center to keep the feet aligned with the floor.
+		animated_sprite.position.y = SPRITE_SPEAR_Y
+	elif state == PlayerState.DAGGER_ATTACK:
+		# The dagger sheet is 50 px tall; shift its center to keep the feet aligned.
+		animated_sprite.position.y = SPRITE_DAGGER_Y
+	elif state == PlayerState.AXE_ATTACK:
+		animated_sprite.position.y = SPRITE_AXE_Y
 	else:
 		animated_sprite.position.y = SPRITE_STANDING_Y
 	match state:
@@ -708,12 +893,18 @@ func _update_animation() -> void:
 		PlayerState.HIT:
 			_set_animation(&"hit")
 
-func _change_state(next_state: PlayerState) -> void:
-	if state == next_state:
+func _change_state(next_state: PlayerState, force_restart: bool = false) -> void:
+	if state == next_state and not force_restart:
 		return
 	var previous: PlayerState = state
+	var previous_was_weapon_attack: bool = previous in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK]
+	var next_is_weapon_attack: bool = next_state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.CROUCH_ATTACK]
 	state = next_state
 	state_time = 0.0
+	if previous_was_weapon_attack and not next_is_weapon_attack:
+		attack_queued = false
+		has_queued_weapon_attack = false
+		combo_buffer_time = 0.0
 	if next_state in [PlayerState.ROLL, PlayerState.SLIDE_START, PlayerState.SLIDE]:
 		invulnerable_time = ACTION_DURATION
 		if next_state in [PlayerState.SLIDE_START, PlayerState.SLIDE]:
@@ -760,11 +951,22 @@ func _change_state(next_state: PlayerState) -> void:
 		_set_animation(_movement_safe(&"attackcombo_no_movement", &"attackcombo"), true)
 		_retrigger_attack_overlaps()
 	elif next_state == PlayerState.SPEAR_ATTACK:
-		swing_audio.play()
 		attack_id += 1
 		attack_hitbox.set_meta("attack_id", attack_id)
 		spear_hitbox_active = false
+		spear_lunge_applied = false
+		spear_critical_active = false
 		_set_animation(&"spearattack", true)
+	elif next_state == PlayerState.DAGGER_ATTACK:
+		attack_id += 1
+		attack_hitbox.set_meta("attack_id", attack_id)
+		dagger_hitbox_active = false
+		_set_animation(&"daggerattack", true)
+	elif next_state == PlayerState.AXE_ATTACK:
+		attack_id += 1
+		attack_hitbox.set_meta("attack_id", attack_id)
+		axe_hitbox_active = false
+		_set_animation(&"axeattack", true)
 	elif next_state == PlayerState.GROUND_POUND:
 		_set_animation(&"groundpound", true)
 	elif next_state == PlayerState.GROUND_POUND_SLAM:
@@ -840,8 +1042,19 @@ func _on_animation_finished() -> void:
 		return
 	if state == PlayerState.SPEAR_ATTACK and finished == &"spearattack":
 		spear_hitbox_active = false
-		_change_state(_locomotion_state())
+		if not _start_queued_weapon_attack():
+			_change_state(_locomotion_state())
+	elif state == PlayerState.DAGGER_ATTACK and finished == &"daggerattack":
+		dagger_hitbox_active = false
+		if not _start_queued_weapon_attack():
+			_change_state(_locomotion_state())
+	elif state == PlayerState.AXE_ATTACK and finished == &"axeattack":
+		axe_hitbox_active = false
+		if not _start_queued_weapon_attack():
+			_change_state(_locomotion_state())
 	elif state == PlayerState.ATTACK1 and finished in [&"attack", &"attack_no_movement"]:
+		if _start_queued_weapon_attack():
+			return
 		if attack_queued and combo_buffer_time > 0.0:
 			attack_queued = false
 			_change_state(PlayerState.ATTACK2)
@@ -849,12 +1062,20 @@ func _on_animation_finished() -> void:
 			combo_link_time = COMBO_BUFFER_DURATION
 			_change_state(_locomotion_state())
 	elif state == PlayerState.ATTACK2 and finished in [&"attack2", &"attack2_no_movement"]:
+		if _start_queued_weapon_attack():
+			return
 		if attack_queued and combo_buffer_time > 0.0:
 			attack_queued = false
 			_change_state(PlayerState.ATTACK3)
 		else:
 			_change_state(_locomotion_state())
-	elif state == PlayerState.ATTACK3 or state == PlayerState.CROUCH_ATTACK or state == PlayerState.GROUND_POUND_SLAM:
+	elif state == PlayerState.ATTACK3 and finished in [&"attackcombo", &"attackcombo_no_movement"]:
+		if not _start_queued_weapon_attack():
+			_change_state(_locomotion_state())
+	elif state == PlayerState.CROUCH_ATTACK and finished == &"crouchattack":
+		if not _start_queued_weapon_attack():
+			_change_state(_locomotion_state())
+	elif state == PlayerState.GROUND_POUND_SLAM:
 		_change_state(_locomotion_state())
 	elif state == PlayerState.TURN:
 		_change_state(_locomotion_state())
@@ -896,6 +1117,38 @@ func prepare_for_boss_cinematic() -> void:
 	if is_on_floor():
 		global_position.y -= 2.0
 
+
+func fall_for_cinematic() -> void:
+	if is_on_floor():
+		velocity = Vector2.ZERO
+		return
+	cinematic_fall_active = true
+	crouched = false
+	velocity.x = 0.0
+	velocity.y = maxf(velocity.y, 0.0)
+	floor_snap_length = floor_snap_distance
+	state = PlayerState.FALL
+	_sync_collision_shape()
+	_update_animation()
+	await cinematic_fall_finished
+
+func _update_cinematic_fall(delta: float) -> void:
+	velocity.x = 0.0
+	if is_on_floor():
+		velocity.y = 0.0
+	else:
+		velocity.y = minf(velocity.y + falling_gravity * delta, max_fall_speed)
+	move_and_slide()
+	_sync_collision_shape()
+	if is_on_floor():
+		velocity = Vector2.ZERO
+		cinematic_fall_active = false
+		state = PlayerState.LOCOMOTION
+		was_grounded = true
+		_update_animation()
+		cinematic_fall_finished.emit()
+	else:
+		_update_animation()
 
 func set_teleport_locked(locked: bool) -> void:
 	teleport_locked = locked
@@ -970,6 +1223,7 @@ func _update_intro_run(delta: float) -> void:
 func set_elevator_riding(active: bool) -> void:
 	elevator_ride_active = active
 	if not active:
+		animated_sprite.position.y = SPRITE_STANDING_Y
 		return
 	crouched = false
 	dead = false
@@ -978,7 +1232,7 @@ func set_elevator_riding(active: bool) -> void:
 	velocity = Vector2.ZERO
 	state = PlayerState.LOCOMOTION
 	animated_sprite.flip_h = false
-	animated_sprite.position = Vector2(0.0, SPRITE_STANDING_Y)
+	animated_sprite.position = Vector2(0.0, SPRITE_STANDING_Y + elevator_sprite_y_offset)
 	body_collision.shape = STANDING_SHAPE
 	attack_shape.disabled = true
 	attack_hitbox.monitoring = false
@@ -993,6 +1247,11 @@ func play_cinematic_animation(animation_name: StringName) -> bool:
 	return true
 
 func finish_cinematic_animation() -> void:
+	velocity = Vector2.ZERO
+	crouched = false
+	body_collision.shape = STANDING_SHAPE
+	floor_snap_length = floor_snap_distance
+	_change_state(PlayerState.LOCOMOTION)
 	animated_sprite.position = Vector2(0.0, SPRITE_STANDING_Y)
 	_set_animation(&"idle", true)
 
@@ -1000,7 +1259,100 @@ func get_attack_level() -> int:
 	return 2 if state == PlayerState.ATTACK2 else 1
 
 func get_attack_damage() -> int:
-	return (20 if state == PlayerState.ATTACK2 else 10) + attack_damage_bonus
+	var original_damage: int = _get_original_attack_damage()
+	return roundi(float(original_damage) * (1.5 if is_attack_critical() else 0.7))
+
+func _get_original_attack_damage() -> int:
+	var base_damage: int = 12 if state == PlayerState.AXE_ATTACK else (20 if state == PlayerState.ATTACK2 else 10)
+	return base_damage + attack_damage_bonus
+
+func is_attack_critical() -> bool:
+	if state == PlayerState.AXE_ATTACK:
+		return axe_hitbox_active and AXE_CRITICAL_FRAMES.has(animated_sprite.frame)
+	if state == PlayerState.SPEAR_ATTACK:
+		if not spear_hitbox_active:
+			return false
+		if not spear_critical_active:
+			spear_critical_active = _count_overlapping_attack_enemies() > 1
+		return spear_critical_active
+	var is_sword_attack: bool = state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.CROUCH_ATTACK]
+	return is_sword_attack and is_speed_boost_active()
+
+func is_attack_critical_for(target: Node) -> bool:
+	if state != PlayerState.DAGGER_ATTACK:
+		return is_attack_critical()
+	if not dagger_hitbox_active or target == null:
+		return false
+	var enemy: Node2D = target as Node2D
+	if enemy == null:
+		return false
+	var target_facing: int = _get_node_facing(target)
+	if target_facing == 0:
+		return false
+	return (global_position.x - enemy.global_position.x) * float(target_facing) < 0.0
+
+func get_attack_damage_for_target(target: Node) -> int:
+	var original_damage: int = _get_original_attack_damage()
+	return roundi(float(original_damage) * (1.5 if is_attack_critical_for(target) else 0.7))
+
+func _get_node_facing(target: Node) -> int:
+	for property: Dictionary in target.get_property_list():
+		if String(property.get("name", "")) == "facing":
+			return signi(int(target.get("facing")))
+	var target_sprite: AnimatedSprite2D = target.find_child("AnimatedSprite2D", true, false) as AnimatedSprite2D
+	if target_sprite != null:
+		return -1 if target_sprite.flip_h else 1
+	return 0
+
+func is_spear_hit_active() -> bool:
+	return state == PlayerState.SPEAR_ATTACK and spear_hitbox_active
+
+func queue_spear_attack_damage(target: Node2D, damage_arguments: Array, scale_damage_with_player: bool = true) -> void:
+	if not is_spear_hit_active():
+		HitEffect.apply_resolved_attack_damage(target, self, damage_arguments, is_attack_critical())
+		return
+	if pending_spear_attack_id != attack_id:
+		pending_spear_hits.clear()
+		pending_spear_attack_id = attack_id
+		spear_hit_resolution_scheduled = false
+	var target_id: int = target.get_instance_id()
+	if not pending_spear_hits.has(target_id):
+		pending_spear_hits[target_id] = {
+			"target": target,
+			"damage_arguments": damage_arguments.duplicate(),
+			"scale_damage": scale_damage_with_player
+		}
+	if not spear_hit_resolution_scheduled:
+		spear_hit_resolution_scheduled = true
+		call_deferred("_resolve_spear_attack_damage", attack_id)
+
+func _resolve_spear_attack_damage(strike_id: int) -> void:
+	if strike_id != pending_spear_attack_id:
+		return
+	spear_hit_resolution_scheduled = false
+	var hits: Array = pending_spear_hits.values()
+	pending_spear_hits.clear()
+	spear_critical_active = hits.size() > 1
+	for hit_data: Dictionary in hits:
+		var target: Node2D = hit_data.get("target") as Node2D
+		if target == null or not is_instance_valid(target):
+			continue
+		var damage_arguments: Array = hit_data.get("damage_arguments", []) as Array
+		if bool(hit_data.get("scale_damage", true)) and not damage_arguments.is_empty():
+			damage_arguments[0] = get_attack_damage()
+		HitEffect.apply_resolved_attack_damage(target, self, damage_arguments, spear_critical_active)
+
+func _count_overlapping_attack_enemies() -> int:
+	if not attack_hitbox.monitoring:
+		return 0
+	var overlapping_enemies: Dictionary = {}
+	for area: Area2D in attack_hitbox.get_overlapping_areas():
+		var candidate: Node = area
+		while candidate != null and not candidate.is_in_group("enemy"):
+			candidate = candidate.get_parent()
+		if candidate != null and candidate.is_in_group("enemy") and candidate.get("dead") != true:
+			overlapping_enemies[candidate.get_instance_id()] = true
+	return overlapping_enemies.size()
 
 func add_attack_damage(amount: int) -> void:
 	attack_damage_bonus += amount
@@ -1063,14 +1415,20 @@ func apply_spike_bounce(horizontal_force: float, direction: float) -> void:
 	velocity.y = -240.0
 
 func _start_hit_slowdown() -> void:
-	if hit_slowdown_active:
-		return
+	hit_slowmo_token += 1
+	var token: int = hit_slowmo_token
 	hit_slowdown_active = true
 	Engine.time_scale = HIT_SLOWMO_SCALE
 	var timer: SceneTreeTimer = get_tree().create_timer(HIT_SLOWMO_DURATION, true, false, true)
-	timer.timeout.connect(_end_hit_slowdown, CONNECT_ONE_SHOT)
+	timer.timeout.connect(func() -> void:
+		if token == hit_slowmo_token:
+			_end_hit_slowdown()
+	, CONNECT_ONE_SHOT)
 
 func _play_hit_feedback() -> void:
+	if speed_boost_time > 0.0:
+		speed_boost_time = 0.0
+		speed_boost_changed.emit(false, 0.0)
 	_start_hit_slowdown()
 	if hit_flash_tween != null and hit_flash_tween.is_running():
 		hit_flash_tween.kill()
@@ -1231,13 +1589,13 @@ func _locomotion_state() -> PlayerState:
 	return PlayerState.CROUCH if crouched else PlayerState.LOCOMOTION
 
 func _can_start_attack() -> bool:
-	return not dead and state not in [PlayerState.HIT, PlayerState.DEATH, PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.ROLL, PlayerState.DASH, PlayerState.TURN]
+	return not dead and state not in [PlayerState.HIT, PlayerState.DEATH, PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.ROLL, PlayerState.DASH, PlayerState.TURN]
 
 func _can_start_dodge() -> bool:
-	return not dead and state not in [PlayerState.HIT, PlayerState.DEATH, PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.ROLL, PlayerState.DASH]
+	return not dead and state not in [PlayerState.HIT, PlayerState.DEATH, PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.ROLL, PlayerState.DASH]
 
 func _can_jump() -> bool:
-	return not dead and (is_on_floor() or coyote_time > 0.0 or _is_wall_attached()) and state not in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.SPEAR_ATTACK, PlayerState.HIT, PlayerState.DEATH, PlayerState.ROLL, PlayerState.DASH]
+	return not dead and (is_on_floor() or coyote_time > 0.0 or _is_wall_attached()) and state not in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.SPEAR_ATTACK, PlayerState.DAGGER_ATTACK, PlayerState.AXE_ATTACK, PlayerState.HIT, PlayerState.DEATH, PlayerState.ROLL, PlayerState.DASH]
 
 func _is_wall_attached() -> bool:
 	return is_on_wall() and not is_on_floor() and wall_contact_can_attach
@@ -1259,25 +1617,69 @@ func _wall_has_two_tiles(collision: KinematicCollision2D) -> bool:
 
 func _sync_collision_shape() -> void:
 	body_collision.shape = CROUCH_SHAPE if crouched else STANDING_SHAPE
+	var hitbox_offset: float = 40.0 if state == PlayerState.SPEAR_ATTACK else (30.0 if state == PlayerState.AXE_ATTACK else 22.0)
+	attack_hitbox.position.x = hitbox_offset * facing
 	var spear_impact_active: bool = state == PlayerState.SPEAR_ATTACK and SPEAR_IMPACT_FRAMES.has(animated_sprite.frame)
 	if state == PlayerState.SPEAR_ATTACK:
 		if spear_impact_active and not spear_hitbox_active:
 			spear_hitbox_active = true
+			spear_critical_active = false
+			spear_lunge_applied = true
+			velocity.x = facing * maxf(absf(velocity.x), SPEAR_LUNGE_SPEED)
+			swing_audio.play()
+			attack_id += 1
+			attack_hitbox.set_meta("attack_id", attack_id)
+			pending_spear_hits.clear()
+			pending_spear_attack_id = attack_id
+			spear_hit_resolution_scheduled = false
+			attack_shape.disabled = false
+			attack_hitbox.monitoring = true
+			var overlapping_areas: Array[Area2D] = attack_hitbox.get_overlapping_areas()
+			if not overlapping_areas.is_empty():
+				hit_stop_time = maxf(hit_stop_time, 0.065)
+			_retrigger_attack_overlaps()
+		elif not spear_impact_active:
+			spear_hitbox_active = false
+			spear_critical_active = false
+			attack_shape.disabled = true
+			attack_hitbox.monitoring = false
+	elif state == PlayerState.DAGGER_ATTACK:
+		var dagger_impact_active: bool = DAGGER_IMPACT_FRAMES.has(animated_sprite.frame)
+		if dagger_impact_active and not dagger_hitbox_active:
+			dagger_hitbox_active = true
+			velocity.x = facing * DAGGER_LUNGE_SPEED
+			swing_audio.play()
 			attack_id += 1
 			attack_hitbox.set_meta("attack_id", attack_id)
 			attack_shape.disabled = false
 			attack_hitbox.monitoring = true
 			_retrigger_attack_overlaps()
-		elif not spear_impact_active:
-			spear_hitbox_active = false
+		elif not dagger_impact_active:
+			dagger_hitbox_active = false
+			attack_shape.disabled = true
+			attack_hitbox.monitoring = false
+	elif state == PlayerState.AXE_ATTACK:
+		var axe_impact_active: bool = AXE_IMPACT_FRAMES.has(animated_sprite.frame)
+		if axe_impact_active and not axe_hitbox_active:
+			axe_hitbox_active = true
+			velocity.x = facing * maxf(absf(velocity.x), AXE_LUNGE_SPEED)
+			swing_audio.play()
+			attack_id += 1
+			attack_hitbox.set_meta("attack_id", attack_id)
+			attack_shape.disabled = false
+			attack_hitbox.monitoring = true
+			_retrigger_attack_overlaps()
+		elif not axe_impact_active:
+			axe_hitbox_active = false
 			attack_shape.disabled = true
 			attack_hitbox.monitoring = false
 	else:
 		spear_hitbox_active = false
+		dagger_hitbox_active = false
+		axe_hitbox_active = false
 		var attack_active: bool = state in [PlayerState.ATTACK1, PlayerState.ATTACK2, PlayerState.ATTACK3, PlayerState.CROUCH_ATTACK]
 		attack_shape.disabled = not attack_active
 		attack_hitbox.monitoring = attack_active
-	attack_hitbox.position.x = (40.0 if state == PlayerState.SPEAR_ATTACK else 22.0) * facing
 	var ground_pound_active: bool = state == PlayerState.GROUND_POUND_SLAM and animated_sprite.frame == 1
 	ground_pound_shape.set_deferred("disabled", not ground_pound_active)
 	ground_pound_hitbox.set_deferred("monitoring", ground_pound_active)

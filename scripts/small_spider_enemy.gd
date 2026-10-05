@@ -8,9 +8,9 @@ const ATTACK_INDICATOR_SCENE: PackedScene = preload("res://scenes/attackindicato
 const ATTACK_IMPACT_FRAME: int = 4 # Fifth displayed frame (zero-indexed).
 const ENEMY_HURT_SOUND: AudioStream = preload("res://assets/sounds/enemyhurt.mp3")
 const ATTACK_WOOSH_PITCH: float = 1.60
-const SPIDER_DESATURATION: float = 0.15
-const SPIDER_OVERLAY_COLOR: Color = Color(0.28, 0.36, 0.52, 1.0)
-const SPIDER_OVERLAY_STRENGTH: float = 0.15
+const SPIDER_DESATURATION: float = 0.45
+const SPIDER_OVERLAY_COLOR: Color = Color(0.46, 0.46, 0.46, 1.0)
+const SPIDER_OVERLAY_STRENGTH: float = 0.20
 const SPIDER_BRIGHTNESS: float = 1.0
 const SPIDER_VISIBILITY: float = 1.0
 const ENEMY_SCENE_TINT_SHADER: Shader = preload("res://shaders/enemy_scene_tint.gdshader")
@@ -196,7 +196,7 @@ func _on_hurtbox_area_entered(area: Area2D) -> void:
 	var attacker: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 	var attacker_position: Vector2 = attacker.global_position if attacker != null else global_position
 	HitEffect.spawn_hit(get_parent(), global_position, attacker_position, 0)
-	take_damage(1, 1, signf(global_position.x - attacker_position.x))
+	HitEffect.apply_attack_damage(self, attacker, [1, 1, signf(global_position.x - attacker_position.x)], false)
 
 func stun_from_parry(duration: float) -> void:
 	if dead:
@@ -206,7 +206,7 @@ func stun_from_parry(duration: float) -> void:
 
 func _spawn_attack_indicator() -> void:
 	var indicator: AnimatedSprite2D = ATTACK_INDICATOR_SCENE.instantiate() as AnimatedSprite2D
-	indicator.position = Vector2(0.0, -42.0)
+	indicator.position = Vector2(0.0, -36.0)
 	indicator.speed_scale = 1.5
 	add_child(indicator)
 

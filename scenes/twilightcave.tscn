@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" uid="uid://dkisiwmcay5mu" path="res://scenes/bigspider.tscn" id="19_h0pth"]
 [ext_resource type="PackedScene" uid="uid://82g8rctjgfml" path="res://scenes/smallspider.tscn" id="20_7y7ae"]
 
+[ext_resource type="PackedScene" path="res://scenes/scene_lighting_rig.tscn" id="100_lighting_rig"]
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_h52xq"]
 texture = ExtResource("1_h52xq")
 0:0/0 = 0
@@ -9022,3 +9024,5 @@ next_scene = "res://scenes/twilightrewardworld.tscn"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="endlevel" unique_id=1359385139]
 position = Vector2(106.5, -44)
 shape = SubResource("RectangleShape2D_xrivr")
+
+[node name="SceneLightingRig" parent="." instance=ExtResource("100_lighting_rig")]
